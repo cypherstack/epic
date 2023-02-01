@@ -1,11 +1,10 @@
 [package]
-name = "epic_util"
+name = "stack_epic_util"
 version = "3.3.2"
 authors = ["Epic Foundation <epiccash@brickabode.com>"]
 description = "Simple, private and scalable cryptocurrency implementation based on the MimbleWimble chain format."
 license = "Apache-2.0"
-repository = "https://github.com/EpicCash/epic"
-keywords = ["crypto", "epic", "mimblewimble"]
+repository = "https://github.com/cypherstack/epic"
 workspace = ".."
 edition = "2018"
 
