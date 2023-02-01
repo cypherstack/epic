@@ -20,10 +20,10 @@ use self::keychain::{ExtKeychain, Keychain};
 use self::pool::types::{BlockChain, PoolError};
 use self::util::RwLock;
 use crate::common::*;
-use epic_core as core;
-use epic_keychain as keychain;
+use stack_epic_core as core;
+use stack_epic_keychain as keychain;
 use epic_pool as pool;
-use epic_util as util;
+use stack_epic_util as util;
 use std::sync::Arc;
 
 #[derive(Clone)]
