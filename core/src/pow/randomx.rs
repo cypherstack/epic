@@ -1,4 +1,4 @@
-extern crate randomx;
+// extern crate randomx;
 
 use std::marker::PhantomData;
 
@@ -7,10 +7,10 @@ use crate::pow::error::{Error, ErrorKind};
 use crate::pow::{PoWContext, Proof};
 use crate::util::RwLock;
 
-use randomx::{slow_hash, RxState};
+// use randomx::{slow_hash, RxState};
 
 lazy_static! {
-	pub static ref RX_STATE: RwLock<RxState> = RwLock::new(RxState::new());
+	// pub static ref RX_STATE: RwLock<RxState> = RwLock::new(RxState::new());
 }
 
 pub const SEEDHASH_EPOCH_BLOCKS: u64 = 1000;
@@ -97,28 +97,30 @@ where
 	}
 
 	fn pow_solve(&mut self) -> Result<Vec<Proof>, Error> {
-		let hash = {
-			let mut state = RX_STATE.write();
-			slow_hash(&mut state, &self.header, &self.seed)
-		};
-
-		Ok(vec![Proof::RandomXProof { hash: hash.into() }])
+		// let hash = {
+		// 	let mut state = RX_STATE.write();
+		// 	slow_hash(&mut state, &self.header, &self.seed)
+		// };
+		//
+		// Ok(vec![Proof::RandomXProof { hash: hash.into() }])
+		unimplemented!()
 	}
 
 	fn verify(&mut self, proof: &Proof) -> Result<(), Error> {
-		let hash = {
-			let mut state = RX_STATE.write();
-			slow_hash(&mut state, &self.header, &self.seed)
-		};
-
-		let hash_u8: [u8; 32] = hash.into();
-
-		if let Proof::RandomXProof { hash: ref proof } = proof {
-			if &hash_u8 == proof {
-				return Ok(());
-			}
-		}
-
-		Err(ErrorKind::Verification("Hash randomx invalid!".to_string()))?
+		// let hash = {
+		// 	let mut state = RX_STATE.write();
+		// 	slow_hash(&mut state, &self.header, &self.seed)
+		// };
+		//
+		// let hash_u8: [u8; 32] = hash.into();
+		//
+		// if let Proof::RandomXProof { hash: ref proof } = proof {
+		// 	if &hash_u8 == proof {
+		// 		return Ok(());
+		// 	}
+		// }
+		//
+		// Err(ErrorKind::Verification("Hash randomx invalid!".to_string()))?
+		unimplemented!()
 	}
 }
