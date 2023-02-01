@@ -28,7 +28,7 @@ use crate::core::core::hash::Hash;
 use crate::core::global;
 use crate::core::pow::Difficulty;
 use crate::core::ser::{self, ProtocolVersion, Readable, Reader, Writeable, Writer};
-use epic_store;
+use stack_epic_store;
 
 /// Maximum number of block headers a peer should ever send
 pub const MAX_BLOCK_HEADERS: u32 = 512;
@@ -69,7 +69,7 @@ pub enum Error {
 	Banned,
 	ConnectionClose,
 	Timeout,
-	Store(epic_store::Error),
+	Store(stack_epic_store::Error),
 	Chain(chain::Error),
 	PeerWithSelf,
 	NoDandelionRelay,
@@ -89,8 +89,8 @@ impl From<ser::Error> for Error {
 		Error::Serialization(e)
 	}
 }
-impl From<epic_store::Error> for Error {
-	fn from(e: epic_store::Error) -> Error {
+impl From<stack_epic_store::Error> for Error {
+	fn from(e: stack_epic_store::Error) -> Error {
 		Error::Store(e)
 	}
 }
