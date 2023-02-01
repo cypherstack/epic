@@ -21,7 +21,7 @@ use crate::types::*;
 use crate::util;
 use crate::util::secp::pedersen::Commitment;
 use crate::web::*;
-use epic_core::core::TxKernel;
+use stack_epic_core::core::TxKernel;
 use failure::ResultExt;
 use hyper::{Body, Request, StatusCode};
 use std::sync::Weak;

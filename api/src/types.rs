@@ -24,7 +24,7 @@ use crate::p2p;
 use crate::util;
 use crate::util::secp::pedersen;
 use bigint::uint::U256;
-use epic_core::pow::Proof;
+use stack_epic_core::pow::Proof;
 use serde;
 use serde::de::MapAccess;
 use serde::ser::SerializeStruct;

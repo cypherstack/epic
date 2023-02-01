@@ -14,7 +14,7 @@
 
 //! Foreign API External Definition
 
-use epic_core::core::TxKernel;
+use stack_epic_core::core::TxKernel;
 use crate::chain::{Chain, SyncState};
 use crate::core::core::hash::Hash;
 use crate::core::core::transaction::Transaction;

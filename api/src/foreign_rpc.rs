@@ -14,7 +14,7 @@
 
 //! JSON-RPC Stub generation for the Foreign API
 
-use epic_core::core::TxKernel;
+use stack_epic_core::core::TxKernel;
 use crate::core::core::hash::Hash;
 use crate::core::core::transaction::Transaction;
 use crate::foreign::Foreign;
@@ -958,7 +958,7 @@ macro_rules! doctest_helper_json_rpc_foreign_assert_response {
 
 		{
 			/*use epic_servers::test_framework::framework::run_doctest;
-			use epic_util as util;
+			use stack_epic_util as util;
 			use serde_json;
 			use serde_json::Value;
 			use tempfile::tempdir;

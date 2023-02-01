@@ -393,7 +393,7 @@ macro_rules! doctest_helper_json_rpc_owner_assert_response {
 
 		{
 			/*use epic_servers::test_framework::framework::run_doctest;
-			use epic_util as util;
+			use stack_epic_util as util;
 			use serde_json;
 			use serde_json::Value;
 			use tempfile::tempdir;

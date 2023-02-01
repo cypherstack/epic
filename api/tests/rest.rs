@@ -1,5 +1,5 @@
 use epic_api as api;
-use epic_util as util;
+use stack_epic_util as util;
 
 use crate::api::*;
 use hyper::{Body, Request, StatusCode};
