@@ -27,14 +27,14 @@ extern crate serde_derive;
 extern crate log;
 extern crate bigint;
 
-use epic_api as api;
-use epic_chain as chain;
-use epic_core as core;
-use epic_keychain as keychain;
-use epic_p2p as p2p;
-use epic_pool as pool;
-use epic_store as store;
-use epic_util as util;
+use stack_epic_api as api;
+use stack_epic_chain as chain;
+use stack_epic_core as core;
+use stack_epic_keychain as keychain;
+use stack_epic_p2p as p2p;
+use stack_epic_pool as pool;
+use stack_epic_store as store;
+use stack_epic_util as util;
 
 pub mod common;
 mod epic;

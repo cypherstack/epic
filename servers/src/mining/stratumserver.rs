@@ -46,8 +46,8 @@ use crate::pool;
 use crate::util;
 
 use bigint::uint::U256;
-use epic_core::pow::Proof;
-use epic_core::ser::Writeable;
+use stack_epic_core::pow::Proof;
+use stack_epic_core::ser::Writeable;
 
 use futures::sync::mpsc;
 

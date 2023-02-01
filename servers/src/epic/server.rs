@@ -51,7 +51,7 @@ use crate::pool;
 use crate::util::file::get_first_line;
 use crate::util::{RwLock, StopState};
 use clokwerk::{ScheduleHandle, Scheduler, TimeUnits};
-use epic_util::logger::LogEntry;
+use stack_epic_util::logger::LogEntry;
 use fs2::FileExt;
 use walkdir::WalkDir;
 
