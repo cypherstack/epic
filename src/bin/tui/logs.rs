@@ -21,8 +21,8 @@ use cursive::{Cursive, Printer};
 use crate::tui::constants::VIEW_LOGS;
 use cursive::utils::lines::spans::{LinesIterator, Row};
 use cursive::utils::markup::StyledString;
-use epic_util::logger::LogEntry;
 use log::Level;
+use stack_epic_util::logger::LogEntry;
 use std::collections::VecDeque;
 
 pub struct TUILogsView;
