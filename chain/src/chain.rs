@@ -34,7 +34,7 @@ use crate::types::{
 };
 use crate::util::secp::pedersen::{Commitment, RangeProof};
 use crate::util::RwLock;
-use epic_store::Error::NotFoundErr;
+use stack_epic_store::Error::NotFoundErr;
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::Read;

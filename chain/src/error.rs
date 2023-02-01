@@ -18,7 +18,7 @@ use crate::core::ser;
 use crate::keychain;
 use crate::util::secp;
 use crate::util::secp::pedersen::Commitment;
-use epic_store as store;
+use stack_epic_store as store;
 use failure::{Backtrace, Context, Fail};
 use std::fmt::{self, Display};
 use std::io;

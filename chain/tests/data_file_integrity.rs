@@ -13,8 +13,8 @@
 // limitations under the License.
 
 use self::core::genesis;
-use epic_core as core;
-use epic_util as util;
+use stack_epic_core as core;
+use stack_epic_util as util;
 
 mod chain_test_helper;
 

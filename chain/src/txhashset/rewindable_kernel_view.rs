@@ -20,7 +20,7 @@ use crate::core::core::pmmr::RewindablePMMR;
 use crate::core::core::{BlockHeader, TxKernel};
 use crate::error::{Error, ErrorKind};
 use crate::store::Batch;
-use epic_store::pmmr::PMMRBackend;
+use stack_epic_store::pmmr::PMMRBackend;
 
 /// Rewindable (but readonly) view of the kernel set (based on kernel MMR).
 pub struct RewindableKernelView<'a> {

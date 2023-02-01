@@ -13,9 +13,9 @@
 // limitations under the License.
 
 use epic_chain as chain;
-use epic_core as core;
+use stack_epic_core as core;
 
-use epic_util as util;
+use stack_epic_util as util;
 
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
@@ -25,7 +25,7 @@ use crate::chain::store::ChainStore;
 use crate::chain::txhashset;
 use crate::core::core::BlockHeader;
 use crate::util::file;
-use epic_core::core::hash::Hashed;
+use stack_epic_core::core::hash::Hashed;
 
 fn clean_output_dir(dir_name: &str) {
 	let _ = fs::remove_dir_all(dir_name);

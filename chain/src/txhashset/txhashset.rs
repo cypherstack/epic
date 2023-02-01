@@ -29,8 +29,8 @@ use crate::types::{CommitPos, OutputRoots, Tip, TxHashSetRoots, TxHashsetWriteSt
 use crate::util::secp::pedersen::{Commitment, RangeProof};
 use crate::util::{file, secp_static, zip};
 use croaring::Bitmap;
-use epic_store;
-use epic_store::pmmr::{clean_files_by_prefix, PMMRBackend};
+use stack_epic_store;
+use stack_epic_store::pmmr::{clean_files_by_prefix, PMMRBackend};
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -223,7 +223,7 @@ impl TxHashSet {
 					Err(ErrorKind::OutputNotFound.into())
 				}
 			}
-			Err(epic_store::Error::NotFoundErr(_)) => Err(ErrorKind::OutputNotFound.into()),
+			Err(stack_epic_store::Error::NotFoundErr(_)) => Err(ErrorKind::OutputNotFound.into()),
 			Err(e) => Err(ErrorKind::StoreErr(e, "txhashset unspent check".to_string()).into()),
 		}
 	}
