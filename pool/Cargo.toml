@@ -1,11 +1,10 @@
 [package]
-name = "epic_pool"
+name = "stack_epic_pool"
 version = "3.6.0"
 authors = ["Epic Foundation <info@epiccash.com>"]
 description = "Chain implementation for epic, a simple, private and scalable cryptocurrency implementation based on the MimbleWimble chain format."
 license = "Apache-2.0"
-repository = "https://github.com/EpicCash/epic"
-keywords = ["crypto", "epic", "mimblewimble"]
+repository = "https://github.com/cypherstack/epic"
 workspace = '..'
 edition = "2021"
 
@@ -19,10 +18,10 @@ chrono = "0.4.31"
 failure = "0.1"
 failure_derive = "0.1"
 
-epic_core = { path = "../core", version = "3.6.0" }
-epic_keychain = { path = "../keychain", version = "3.6.0" }
-epic_store = { path = "../store", version = "3.6.0" }
-epic_util = { path = "../util", version = "3.6.0" }
+epic_core = { package = "stack_epic_core", path = "../core", version = "3.6.0" }
+epic_keychain = { package = "stack_epic_keychain", path = "../keychain", version = "3.6.0" }
+epic_store = { package = "stack_epic_store", path = "../store", version = "3.6.0" }
+epic_util = { package = "stack_epic_util", path = "../util", version = "3.6.0" }
 
 [dev-dependencies]
-epic_chain = { path = "../chain", version = "3.6.0" }
+epic_chain = { package = "stack_epic_chain", path = "../chain", version = "3.6.0" }

@@ -1,22 +1,23 @@
-extern crate randomx;
+// extern crate randomx;
 
 use std::marker::PhantomData;
 
 //use crate::core::block::BlockHeader;
 use crate::pow::common::EdgeType;
-use crate::pow::error::{Error, ErrorKind};
+use crate::pow::error::Error;
 use crate::pow::{PoWContext, Proof};
-use crate::util::RwLock;
+// use crate::util::RwLock;
 
-use keccak_hash::keccak_256;
+// use keccak_hash::keccak_256;
+use std::unimplemented;
 
-use progpow::hardware::cpu::PpCPU;
-use progpow::types::PpCompute;
+// use progpow::hardware::cpu::PpCPU;
+// use progpow::types::PpCompute;
 
 //use bigint::uint::U256;
 
 lazy_static! {
-	pub static ref PP_CPU: RwLock<PpCPU> = RwLock::new(PpCPU::new());
+	// pub static ref PP_CPU: RwLock<PpCPU> = RwLock::new(PpCPU::new());
 }
 
 pub fn new_progpow_ctx<T>() -> Result<Box<dyn PoWContext<T>>, Error>
@@ -31,30 +32,31 @@ where
 	}))
 }
 
-fn transform_header(header: &[u8]) -> [u8; 32] {
-	// slice header
-	let sheader = &header[0..(header.len() - 8)];
+// fn transform_header(header: &[u8]) -> [u8; 32] {
+// 	// slice header
+// 	let sheader = &header[0..(header.len() - 8)];
+//
+// 	// copy header
+// 	let cheader = sheader.to_vec();
+//
+// 	let mut header = [0u8; 32];
+// 	keccak_256(&cheader, &mut header);
+//
+// 	header
+// }
 
-	// copy header
-	let cheader = sheader.to_vec();
-
-	let mut header = [0u8; 32];
-	keccak_256(&cheader, &mut header);
-
-	header
-}
-
-pub fn get_progpow_value(header: &[u8], height: u64, nonce: u64) -> [u8; 32] {
-	let (value, _) = {
-		let progpow = PP_CPU.read();
-		progpow
-			.verify(&transform_header(&header), height, nonce)
-			.unwrap()
-	};
-
-	let digest: [u8; 32] = unsafe { ::std::mem::transmute(value) };
-
-	digest
+pub fn get_progpow_value(_header: &[u8], _height: u64, _nonce: u64) -> [u8; 32] {
+	// let (value, _) = {
+	// 	let progpow = PP_CPU.read();
+	// 	progpow
+	// 		.verify(&transform_header(&header), height, nonce)
+	// 		.unwrap()
+	// };
+	//
+	// let digest: [u8; 32] = unsafe { ::std::mem::transmute(value) };
+	//
+	// digest
+	unimplemented!()
 }
 
 pub struct ProgPowContext<T>
@@ -85,33 +87,35 @@ where
 	}
 
 	fn pow_solve(&mut self) -> Result<Vec<Proof>, Error> {
-		let (_, m) = {
-			let progpow = PP_CPU.read();
-			progpow
-				.verify(&transform_header(&self.header), self.height, self.nonce)
-				.unwrap()
-		};
-
-		let mix: [u8; 32] = unsafe { ::std::mem::transmute(m) };
-
-		Ok(vec![Proof::ProgPowProof { mix }])
+		// let (_, m) = {
+		// 	let progpow = PP_CPU.read();
+		// 	progpow
+		// 		.verify(&transform_header(&self.header), self.height, self.nonce)
+		// 		.unwrap()
+		// };
+		//
+		// let mix: [u8; 32] = unsafe { ::std::mem::transmute(m) };
+		//
+		// Ok(vec![Proof::ProgPowProof { mix }])
+		unimplemented!()
 	}
 
-	fn verify(&mut self, proof: &Proof) -> Result<(), Error> {
-		let (_, tm) = {
-			let progpow = PP_CPU.read();
-			progpow
-				.verify(&transform_header(&self.header), self.height, self.nonce)
-				.unwrap()
-		};
-
-		if let Proof::ProgPowProof { ref mix } = proof {
-			let mix_test: [u32; 8] = unsafe { ::std::mem::transmute(*mix) };
-			if mix_test == tm {
-				return Ok(());
-			}
-		}
-
-		Err(ErrorKind::Verification("Hash progpow invalid!".to_string()))?
+	fn verify(&mut self, _proof: &Proof) -> Result<(), Error> {
+		// let (_, tm) = {
+		// 	let progpow = PP_CPU.read();
+		// 	progpow
+		// 		.verify(&transform_header(&self.header), self.height, self.nonce)
+		// 		.unwrap()
+		// };
+		//
+		// if let Proof::ProgPowProof { ref mix } = proof {
+		// 	let mix_test: [u32; 8] = unsafe { ::std::mem::transmute(*mix) };
+		// 	if mix_test == tm {
+		// 		return Ok(());
+		// 	}
+		// }
+		//
+		// Err(ErrorKind::Verification("Hash progpow invalid!".to_string()))?
+		unimplemented!()
 	}
 }

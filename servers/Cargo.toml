@@ -1,11 +1,10 @@
 [package]
-name = "epic_servers"
+name = "stack_epic_servers"
 version = "3.6.0"
 authors = ["Epic Foundation <info@epiccash.com>"]
 description = "Simple, private and scalable cryptocurrency implementation based on the MimbleWimble chain format."
 license = "Apache-2.0"
-repository = "https://github.com/EpicCash/epic"
-keywords = ["crypto", "epic", "mimblewimble"]
+repository = "https://github.com/cypherstack/epic"
 workspace = ".."
 edition = "2021"
 
@@ -37,11 +36,11 @@ trust-dns-resolver = "0.11.1"
 walkdir = "2.2.9"
 
 
-epic_api = { path = "../api", version = "3.6.0" }
-epic_chain = { path = "../chain", version = "3.6.0" }
-epic_core = { path = "../core", version = "3.6.0" }
-epic_keychain = { path = "../keychain", version = "3.6.0" }
-epic_p2p = { path = "../p2p", version = "3.6.0" }
-epic_pool = { path = "../pool", version = "3.6.0" }
-epic_store = { path = "../store", version = "3.6.0" }
-epic_util = { path = "../util", version = "3.6.0" }
+epic_api = { package = "stack_epic_api", path = "../api", version = "3.6.0" }
+epic_chain = { package = "stack_epic_chain", path = "../chain", version = "3.6.0" }
+epic_core = { package = "stack_epic_core", path = "../core", version = "3.6.0" }
+epic_keychain = { package = "stack_epic_keychain", path = "../keychain", version = "3.6.0" }
+epic_p2p = { package = "stack_epic_p2p", path = "../p2p", version = "3.6.0" }
+epic_pool = { package = "stack_epic_pool", path = "../pool", version = "3.6.0" }
+epic_store = { package = "stack_epic_store", path = "../store", version = "3.6.0" }
+epic_util = { package = "stack_epic_util", path = "../util", version = "3.6.0" }

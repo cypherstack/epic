@@ -50,14 +50,14 @@ reqwest = "0.11.11"
 
 tokio = { version = "1.32", features = ["full"] }
 
-epic_api = { path = "./api", version = "3.6.0" }
-epic_config = { path = "./config", version = "3.6.0" }
-epic_core = { path = "./core", version = "3.6.0" }
-epic_keychain = { path = "./keychain", version = "3.6.0" }
-epic_p2p = { path = "./p2p", version = "3.6.0" }
-epic_servers = { path = "./servers", version = "3.6.0" }
-epic_util = { path = "./util", version = "3.6.0" }
-epic_chain = { path = "./chain", version = "3.6.0" }
+epic_api = { package = "stack_epic_api", path = "./api", version = "3.6.0" }
+epic_config = { package = "stack_epic_config", path = "./config", version = "3.6.0" }
+epic_core = { package = "stack_epic_core", path = "./core", version = "3.6.0" }
+epic_keychain = { package = "stack_epic_keychain", path = "./keychain", version = "3.6.0" }
+epic_p2p = { package = "stack_epic_p2p", path = "./p2p", version = "3.6.0" }
+epic_servers = { package = "stack_epic_servers", path = "./servers", version = "3.6.0" }
+epic_util = { package = "stack_epic_util", path = "./util", version = "3.6.0" }
+epic_chain = { package = "stack_epic_chain", path = "./chain", version = "3.6.0" }
 
 cursive = { version = "0.17", default-features = false, features = [
     "pancurses-backend",
@@ -75,5 +75,5 @@ harness = false
 built = { version = "0.7.1", features = ["git2", "cargo-lock"] }
 
 [dev-dependencies]
-epic_store = { path = "./store", version = "3.6.0" }
+epic_store = { package = "stack_epic_store", path = "./store", version = "3.6.0" }
 cucumber_rust = { version = "^0.5.1", default-features = false }
