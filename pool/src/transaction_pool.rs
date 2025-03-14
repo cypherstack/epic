@@ -24,8 +24,8 @@ use self::util::RwLock;
 use crate::pool::Pool;
 use crate::types::{BlockChain, PoolAdapter, PoolConfig, PoolEntry, PoolError, TxSource};
 use chrono::prelude::*;
-use stack_epic_core as core;
-use stack_epic_util as util;
+use epic_core as core;
+use epic_util as util;
 use std::collections::VecDeque;
 use std::sync::Arc;
 

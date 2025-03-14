@@ -21,8 +21,8 @@
 #![deny(unused_mut)]
 
 //extern crate blake2_rfc as blake2;
-//extern crate stack_epic_core as core;
-//extern crate stack_epic_keychain as keychain;
+//extern crate epic_core as core;
+//extern crate epic_keychain as keychain;
 //extern crate epic_util as util;
 #[allow(unused_imports)]
 #[macro_use] // Needed for Serialize/Deserialize. The compiler complaining here is a bug.

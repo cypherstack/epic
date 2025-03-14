@@ -21,10 +21,10 @@ use self::keychain::{ExtKeychain, Keychain};
 use self::pool::TxSource;
 use self::util::RwLock;
 use crate::common::*;
-use stack_epic_core as core;
-use stack_epic_keychain as keychain;
+use epic_core as core;
+use epic_keychain as keychain;
 use epic_pool as pool;
-use stack_epic_util as util;
+use epic_util as util;
 use std::sync::Arc;
 
 /// Test we can add some txs to the pool (both stempool and txpool).

@@ -23,8 +23,8 @@ use self::core::core::{
 };
 use self::util::RwLock;
 use crate::types::{BlockChain, PoolEntry, PoolError};
-use stack_epic_core as core;
-use stack_epic_util as util;
+use epic_core as core;
+use epic_util as util;
 use std::cmp::Reverse;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
