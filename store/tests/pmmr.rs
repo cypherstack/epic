@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use env_logger;
-use stack_epic_core as core;
+use epic_core as core;
 use epic_store as store;
 
 use std::fs;

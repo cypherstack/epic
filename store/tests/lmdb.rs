@@ -13,9 +13,9 @@
 // limitations under the License.
 
 use epic_store as store;
-use stack_epic_util as util;
+use epic_util as util;
 
-use stack_epic_core::ser::{self, Readable, Reader, Writeable, Writer};
+use epic_core::ser::{self, Readable, Reader, Writeable, Writer};
 
 use std::fs;
 
