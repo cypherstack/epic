@@ -17,7 +17,7 @@
 use blake2_rfc as blake2;
 
 #[macro_use]
-extern crate epic_util as util;
+extern crate stack_test_epic_util as util;
 
 #[macro_use]
 extern crate serde_derive;
@@ -25,6 +25,7 @@ extern crate serde_derive;
 #[macro_use]
 extern crate lazy_static;
 
+#[macro_use]
 extern crate zeroize;
 
 mod base58;

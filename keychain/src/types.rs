@@ -62,7 +62,11 @@ impl From<extkey_bip32::Error> for Error {
 }
 
 impl error::Error for Error {
-	// placeholder for std::error members such as 'source()'
+	fn description(&self) -> &str {
+		match *self {
+			_ => "some kind of keychain error",
+		}
+	}
 }
 
 impl fmt::Display for Error {
