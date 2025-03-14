@@ -276,9 +276,6 @@ impl ChainAdapter for DummyAdapter {
 	fn total_height(&self) -> Result<u64, chain::Error> {
 		Ok(0)
 	}
-	fn total_header_height(&self) -> Result<u64, chain::Error> {
-		Ok(0)
-	}
 	fn get_transaction(&self, _h: Hash) -> Option<core::Transaction> {
 		None
 	}
@@ -315,7 +312,6 @@ impl ChainAdapter for DummyAdapter {
 	) -> Result<bool, chain::Error> {
 		Ok(true)
 	}
-
 	fn headers_received(
 		&self,
 		_: &[core::BlockHeader],
@@ -323,11 +319,9 @@ impl ChainAdapter for DummyAdapter {
 	) -> Result<bool, chain::Error> {
 		Ok(true)
 	}
-
-	fn locate_headers(&self, _: &[Hash], _: &u8) -> Result<Vec<core::BlockHeader>, chain::Error> {
+	fn locate_headers(&self, _: &[Hash]) -> Result<Vec<core::BlockHeader>, chain::Error> {
 		Ok(vec![])
 	}
-
 	fn get_block(&self, _: Hash) -> Option<core::Block> {
 		None
 	}
