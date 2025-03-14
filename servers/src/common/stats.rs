@@ -27,7 +27,7 @@ use crate::core::ser::ProtocolVersion;
 
 use chrono::prelude::*;
 
-use crate::chain;
+//use crate::chain;
 use crate::chain::SyncStatus;
 use crate::p2p;
 
@@ -254,7 +254,7 @@ impl PeerStats {
 			total_diff.saturating_add(peer.info.total_difficulty().to_num(PoWType::RandomX));
 		PeerStats {
 			state: state.to_string(),
-			addr: addr,
+			addr,
 			version: peer.info.version,
 			user_agent: peer.info.user_agent.clone(),
 			total_difficulty: total_diff,

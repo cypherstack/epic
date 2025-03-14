@@ -37,6 +37,7 @@ use crate::common::stats::{
 	ChainStats, DiffBlock, DiffStats, PeerStats, ServerStateInfo, ServerStats, TxStats,
 };
 use crate::common::types::{Error, ServerConfig, StratumServerConfig};
+use crate::core::core::feijoada::PolicyConfig;
 use crate::core::core::hash::Hashed;
 use crate::core::core::hash::{Hash, ZERO_HASH};
 use crate::core::pow::{PoWType, Proof};
@@ -50,10 +51,20 @@ use crate::p2p::types::PeerAddr;
 use crate::pool;
 use crate::util::file::get_first_line;
 use crate::util::{RwLock, StopState};
-use clokwerk::{ScheduleHandle, Scheduler, TimeUnits};
-use stack_epic_util::logger::LogEntry;
+use clokwerk::{/*ScheduleHandle,*/ Scheduler, TimeUnits};
+use epic_util::logger::LogEntry;
 use fs2::FileExt;
 use walkdir::WalkDir;
+
+fn is_test_network() -> bool {
+	match *global::CHAIN_TYPE.read() {
+		global::ChainTypes::Mainnet => false,
+		_ => true,
+	}
+}
+
+/// Arcified  thread-safe TransactionPool with type parameters used by server components
+pub type ServerTxPool = Arc<RwLock<pool::TransactionPool<PoolToChainAdapter, PoolToNetAdapter>>>;
 
 /// Epic server holding internal structures.
 pub struct Server {
@@ -64,7 +75,7 @@ pub struct Server {
 	/// data store access
 	pub chain: Arc<chain::Chain>,
 	/// in-memory transaction pool
-	pub tx_pool: Arc<RwLock<pool::TransactionPool>>,
+	pub tx_pool: ServerTxPool,
 	/// Whether we're currently syncing
 	pub sync_state: Arc<SyncState>,
 	/// To be passed around to collect stats and info
@@ -86,6 +97,11 @@ impl Server {
 		config: ServerConfig,
 		logs_rx: Option<mpsc::Receiver<LogEntry>>,
 		mut info_callback: F,
+		stop_state: Option<Arc<StopState>>,
+		api_chan: &'static mut (
+			tokio::sync::oneshot::Sender<()>,
+			tokio::sync::oneshot::Receiver<()>,
+		),
 	) -> Result<(), Error>
 	where
 		F: FnMut(Server, Option<mpsc::Receiver<LogEntry>>),
@@ -100,9 +116,31 @@ impl Server {
 				panic!("Error reading the .toml file!\n The values of the policy number <{}> must sum to 100 and be integers!\n", i);
 			};
 		}
+
 		// set the policies configs from the .toml file
 		global::set_policy_config(policy_config);*/
+
+		if is_test_network() {
+			// guard against lack of presence in old config files
+			// otherwise unwrapping non-existent value causes runtime crash
+			if config.no_progpow.is_some() {
+				let no_progpow = config.no_progpow.unwrap();
+				if no_progpow {
+					global::set_policy_config(PolicyConfig::no_progpow());
+					info!("printing no_progpow value: {}", no_progpow);
+				}
+			}
+			if config.only_randomx.is_some() {
+				let only_randomx = config.only_randomx.unwrap();
+				if only_randomx {
+					global::set_policy_config(PolicyConfig::only_randomx());
+					info!("printing only_randomx value: {}", only_randomx);
+				}
+			}
+		}
+
 		global::set_foundation_path(config.foundation_path.clone().to_owned());
+
 		info!(
 			"The policy configuration is: {:?}",
 			global::get_policy_config()
@@ -111,6 +149,7 @@ impl Server {
 			"The foundation.json is being read from {:?}",
 			global::get_foundation_path().unwrap()
 		);
+
 		let hash_to_compare = global::foundation_json_sha256();
 		let hash = global::get_file_sha256(global::get_foundation_path().unwrap().as_str());
 		if hash.as_str() != hash_to_compare {
@@ -122,10 +161,12 @@ impl Server {
 			);
 			std::process::exit(1);
 		}
+
 		let mining_config = config.stratum_mining_config.clone();
 		let enable_test_miner = config.run_test_miner;
 		let test_miner_wallet_url = config.test_miner_wallet_url.clone();
-		let serv = Server::new(config)?;
+
+		let serv = Server::new(config, stop_state, api_chan)?;
 
 		if let Some(c) = mining_config {
 			let enable_stratum_server = c.enable_stratum_server;
@@ -155,7 +196,7 @@ impl Server {
 	// This uses fs2 and should be safe cross-platform unless somebody abuses the file itself.
 	fn one_epic_at_a_time(config: &ServerConfig) -> Result<Arc<File>, Error> {
 		let path = Path::new(&config.db_root);
-		fs::create_dir_all(path.clone())?;
+		fs::create_dir_all(path)?;
 		let path = path.join("epic.lock");
 		let lock_file = fs::OpenOptions::new()
 			.read(true)
@@ -176,7 +217,16 @@ impl Server {
 	}
 
 	/// Instantiates a new server associated with the provided future reactor.
-	pub fn new(config: ServerConfig) -> Result<Server, Error> {
+	pub fn new(
+		config: ServerConfig,
+		//TODO: see if below should be used instead of defining new var in function
+		// had to add underscore to silence compiler warnings
+		stop_state: Option<Arc<StopState>>,
+		api_chan: &'static mut (
+			tokio::sync::oneshot::Sender<()>,
+			tokio::sync::oneshot::Receiver<()>,
+		),
+	) -> Result<Server, Error> {
 		// Obtain our lock_file or fail immediately with an error.
 		let lock_file = Server::one_epic_at_a_time(&config)?;
 
@@ -187,7 +237,11 @@ impl Server {
 			Some(b) => b,
 		};
 
-		let stop_state = Arc::new(StopState::new());
+		let stop_state = if stop_state.is_some() {
+			stop_state.unwrap()
+		} else {
+			Arc::new(StopState::new())
+		};
 
 		let pool_adapter = Arc::new(PoolToChainAdapter::new());
 		let pool_net_adapter = Arc::new(PoolToNetAdapter::new(config.dandelion_config.clone()));
@@ -324,6 +378,8 @@ impl Server {
 			api_secret.clone(),
 			foreign_api_secret.clone(),
 			tls_conf.clone(),
+			api_chan,
+			stop_state.clone(),
 		)?;
 
 		info!("Starting dandelion monitor: {}", &config.api_http_addr);
@@ -357,9 +413,10 @@ impl Server {
 				error!("Unable to get the allowed versions from the dns server!");
 			}
 		});
-		let version_checker_thread = scheduler.watch_thread(Duration::from_millis(100));
+		let _version_checker_thread = scheduler.watch_thread(Duration::from_millis(100));
 
 		warn!("Epic server started.");
+
 		Ok(Server {
 			config,
 			p2p: p2p_server,
@@ -424,7 +481,7 @@ impl Server {
 		stop_state: Arc<StopState>,
 	) {
 		info!("start_test_miner - start",);
-		let sync_state = self.sync_state.clone();
+		let _sync_state = self.sync_state.clone();
 		let config_wallet_url = match wallet_listener_url.clone() {
 			Some(u) => u,
 			None => String::from("http://127.0.0.1:13415"),
@@ -529,7 +586,7 @@ impl Server {
 						block_hash: hash,
 						difficulty: next.difficulty.to_num(algo_type),
 						time: next.timestamp,
-						duration: duration,
+						duration,
 						secondary_scaling: next.secondary_scaling,
 						is_secondary: next.is_secondary,
 						algorithm: algo_name.to_owned(),
@@ -618,13 +675,13 @@ impl Server {
 		Ok(ServerStats {
 			peer_count: self.peer_count(),
 			chain_stats: head_stats,
-			header_stats: header_stats,
+			header_stats,
 			sync_status: self.sync_state.status(),
-			disk_usage_gb: disk_usage_gb,
-			stratum_stats: stratum_stats,
-			peer_stats: peer_stats,
-			diff_stats: diff_stats,
-			tx_stats: tx_stats,
+			disk_usage_gb,
+			stratum_stats,
+			peer_stats,
+			diff_stats,
+			tx_stats,
 		})
 	}
 

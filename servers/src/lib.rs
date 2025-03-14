@@ -19,7 +19,7 @@
 #![deny(non_camel_case_types)]
 #![deny(non_snake_case)]
 #![deny(unused_mut)]
-#![warn(missing_docs)]
+//#![warn(missing_docs)]
 
 #[macro_use]
 extern crate serde_derive;
@@ -27,14 +27,14 @@ extern crate serde_derive;
 extern crate log;
 extern crate bigint;
 
-use stack_epic_api as api;
-use stack_epic_chain as chain;
-use stack_epic_core as core;
-use stack_epic_keychain as keychain;
-use stack_epic_p2p as p2p;
-use stack_epic_pool as pool;
-use stack_epic_store as store;
-use stack_epic_util as util;
+use epic_api as api;
+use epic_chain as chain;
+use epic_core as core;
+use epic_keychain as keychain;
+use epic_p2p as p2p;
+use epic_pool as pool;
+use epic_store as store;
+use epic_util as util;
 
 pub mod common;
 mod epic;
@@ -43,4 +43,4 @@ mod mining;
 
 pub use crate::common::stats::{DiffBlock, PeerStats, ServerStats, StratumStats, WorkerStats};
 pub use crate::common::types::{ServerConfig, StratumServerConfig};
-pub use crate::epic::server::Server;
+pub use crate::epic::server::{Server, ServerTxPool};

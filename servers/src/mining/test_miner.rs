@@ -17,23 +17,22 @@
 //! header with its proof-of-work.  Any valid mined blocks are submitted to the
 //! network.
 
-use crate::util::RwLock;
-use chrono::prelude::Utc;
-use std::sync::Arc;
-
 use crate::chain;
 use crate::common::types::StratumServerConfig;
 use crate::core::core::hash::{Hash, Hashed};
 use crate::core::core::{Block, BlockHeader};
 use crate::core::global;
 use crate::mining::mine_block;
-use crate::pool;
+use chrono::prelude::Utc;
+use std::sync::Arc;
+
 use crate::util::StopState;
+use crate::ServerTxPool;
 
 pub struct Miner {
 	config: StratumServerConfig,
 	chain: Arc<chain::Chain>,
-	tx_pool: Arc<RwLock<pool::TransactionPool>>,
+	tx_pool: ServerTxPool,
 	stop_state: Arc<StopState>,
 
 	// Just to hold the port we're on, so this miner can be identified
@@ -47,7 +46,7 @@ impl Miner {
 	pub fn new(
 		config: StratumServerConfig,
 		chain: Arc<chain::Chain>,
-		tx_pool: Arc<RwLock<pool::TransactionPool>>,
+		tx_pool: ServerTxPool,
 		stop_state: Arc<StopState>,
 	) -> Miner {
 		Miner {
@@ -146,7 +145,7 @@ impl Miner {
 			let head = self.chain.head_header().unwrap();
 			let mut latest_hash = self.chain.head().unwrap().last_block_h;
 
-			let (mut b, block_fees, pow_type) = mine_block::get_block(
+			let (mut b, block_fees, _pow_type) = mine_block::get_block(
 				&self.chain,
 				&self.tx_pool,
 				key_id.clone(),
