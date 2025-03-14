@@ -80,10 +80,10 @@ pub fn save_via_temp_file<F, P, E>(
 	temp_suffix: E,
 	mut writer: F,
 ) -> Result<(), std::io::Error>
-where
-	F: FnMut(Box<dyn std::io::Write>) -> Result<(), std::io::Error>,
-	P: AsRef<Path>,
-	E: AsRef<OsStr>,
+	where
+		F: FnMut(Box<dyn std::io::Write>) -> Result<(), std::io::Error>,
+		P: AsRef<Path>,
+		E: AsRef<OsStr>,
 {
 	let temp_suffix = temp_suffix.as_ref();
 	assert!(!temp_suffix.is_empty());
@@ -110,7 +110,7 @@ where
 	Ok(())
 }
 
-use croaring::{Bitmap, Portable};
+use croaring::Bitmap;
 use std::io::{self, Read};
 /// Read Bitmap from a file
 pub fn read_bitmap<P: AsRef<Path>>(file_path: P) -> io::Result<Bitmap> {
@@ -118,5 +118,5 @@ pub fn read_bitmap<P: AsRef<Path>>(file_path: P) -> io::Result<Bitmap> {
 	let f_md = bitmap_file.metadata()?;
 	let mut buffer = Vec::with_capacity(f_md.len() as usize);
 	bitmap_file.read_to_end(&mut buffer)?;
-	Ok(Bitmap::deserialize::<Portable>(&buffer))
+	Ok(Bitmap::deserialize(&buffer))
 }

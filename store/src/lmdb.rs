@@ -122,11 +122,19 @@ impl Store {
 
 		{
 			let mut w = res.db.write();
-			*w = Some(Arc::new(lmdb::Database::open(
+			*w = Some(Arc::new(match lmdb::Database::open(
 				res.env.clone(),
 				Some(&res.name),
 				&lmdb::DatabaseOptions::new(lmdb::db::CREATE),
-			)?));
+			) {
+				Ok(db_open) => {
+					db_open
+				}
+				Err(err) => {
+					debug!("LMDB Open Error {}", err.to_string());
+					return  Err(Error::from(err))
+				}
+			}));
 		}
 		Ok(res)
 	}
