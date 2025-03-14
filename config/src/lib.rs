@@ -23,10 +23,10 @@
 #[macro_use]
 extern crate serde_derive;
 
-use stack_epic_core as core;
-use stack_epic_p2p as p2p;
-use stack_epic_servers as servers;
-use stack_epic_util as util;
+use epic_core as core;
+use epic_p2p as p2p;
+use epic_servers as servers;
+use epic_util as util;
 
 mod comments;
 pub mod config;

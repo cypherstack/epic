@@ -104,6 +104,24 @@ fn comments() -> HashMap<String, String> {
 	);
 
 	retval.insert(
+		"skip_pow_validation".to_string(),
+		"
+#Whether or not to skip pow validation when syncing headers
+#Only applies to blocks in checkpointed range, unless disable_checkpoints is set to true
+"
+		.to_string(),
+	);
+
+	retval.insert(
+		"disable_checkpoints".to_string(),
+		"
+#Disables checkpoint-based pow_validation, no proof of work will be validated whatsoever
+#while syncing. Has no effect unless 'skip_pow_validation' is set to true
+"
+		.to_string(),
+	);
+
+	retval.insert(
 		"archive_mode".to_string(),
 		"
 #run the node in \"full archive\" mode (default is fast-sync, pruned node)
@@ -144,6 +162,24 @@ fn comments() -> HashMap<String, String> {
 #Whether to run a test miner. This is only for developer testing (chaintype
 #usertesting) at cuckoo 16, and will only mine into the default wallet port.
 #real mining should use the standalone epic-miner
+"
+		.to_string(),
+	);
+
+	retval.insert(
+		"only_randomx".to_string(),
+		"
+#Whether or not to set PolicyConfig to only use PoWType::RandomX.
+#Required for use of Floonet, has no effect on Mainnet
+"
+		.to_string(),
+	);
+
+	retval.insert(
+		"no_progpow".to_string(),
+		"
+#Whether or not to set PolicyConfig to disable PoWType::ProgPow
+#For use on Floonet or Usernet. Has no effect on Mainnet
 "
 		.to_string(),
 	);
@@ -233,7 +269,7 @@ fn comments() -> HashMap<String, String> {
 		"[server.p2p_config.capabilities]".to_string(),
 		"#If the seeding type is List, the list of peers to connect to can
 #be specified as follows:
-#seeds = [\"192.168.0.1:3414\",\"192.168.0.2:3414\"]
+seeds = [\"95.217.197.180:3517\",\"5.161.127.56:3414\",\"5.75.242.4:3414\",\"5.78.71.29:3414\"]
 
 #hardcoded peer lists for allow/deny
 #will *only* connect to peers in allow list
@@ -246,14 +282,17 @@ fn comments() -> HashMap<String, String> {
 #how long a banned peer should stay banned
 #ban_window = 10800
 
-#maximum number of peers
-#peer_max_count = 125
+#maximum number of inbound peers (default = 128)
+#peer_max_inbound_count = 40
+
+#maximum number of outbound peers (default = 128)
+#peer_max_outbound_count = 40
 
 #preferred minimum number of peers (we'll actively keep trying to add peers
 #until we get to at least this number
 #peer_min_preferred_count = 8
 
-# 15 = Bit flags for FULL_NODE
+# 31 = Bit flags for FULL_NODE, with HEADER_FASTSYNC capability
 #This structure needs to be changed internally, to make it more configurable
 
 # A preferred dandelion_peer, mainly used for testing dandelion
