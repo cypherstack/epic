@@ -26,8 +26,8 @@ use failure;
 #[macro_use]
 extern crate failure_derive;
 #[macro_use]
-extern crate stack_epic_core as core;
-extern crate stack_epic_util as util;
+extern crate epic_core as core;
+extern crate epic_util as util;
 
 //use epic_core as core;
 
