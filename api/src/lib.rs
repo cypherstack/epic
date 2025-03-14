@@ -12,16 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use stack_epic_chain as chain;
-use stack_epic_core as core;
-use stack_epic_p2p as p2p;
-use stack_epic_pool as pool;
+use epic_chain as chain;
+use epic_core as core;
+use epic_p2p as p2p;
+use epic_pool as pool;
 
-use stack_epic_util as util;
+use epic_util as util;
 
-use failure;
-#[macro_use]
-extern crate failure_derive;
 #[macro_use]
 extern crate lazy_static;
 
@@ -40,7 +37,7 @@ mod foreign_rpc;
 mod handlers;
 mod owner;
 mod owner_rpc;
-mod rest;
+pub mod rest;
 mod router;
 mod types;
 
