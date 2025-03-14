@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use stack_epic_util as util;
+use epic_util as util;
 
 use self::util::file;
 use std::fs::{self, File};
