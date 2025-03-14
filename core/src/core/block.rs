@@ -16,18 +16,21 @@
 
 pub mod feijoada;
 
-use chrono;
+use crate::util::RwLock;
+use chrono::naive::{MAX_DATE, MIN_DATE};
+use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 use chrono::Duration;
-use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 use keccak_hash::keccak_256;
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::convert::TryInto;
 use std::fmt;
 use std::iter::FromIterator;
+use std::sync::Arc;
 
 use crate::consensus::{
-	self, add_reward_foundation, is_foundation_height, /*reward,*/ reward_at_height,
-	reward_foundation, total_overage_at_height,
+	self, add_reward_foundation, is_foundation_height, reward, reward_at_height, reward_foundation,
+	total_overage_at_height,
 };
 use crate::core::block::feijoada::{get_bottles_default, Policy};
 use crate::core::committed::{self, Committed};
@@ -131,7 +134,7 @@ pub struct HeaderEntry {
 }
 
 impl Readable for HeaderEntry {
-	fn read(reader: &mut dyn Reader) -> Result<HeaderEntry, ser::Error> {
+	fn read(reader: &mut Reader) -> Result<HeaderEntry, ser::Error> {
 		let hash = Hash::read(reader)?;
 		let timestamp = reader.read_u64()?;
 		let total_difficulty = Difficulty::read(reader)?;
@@ -251,10 +254,7 @@ impl Default for BlockHeader {
 		BlockHeader {
 			version: HeaderVersion::default(),
 			height: 0,
-			timestamp: TimeZone::from_utc_datetime(
-				&Utc,
-				&NaiveDateTime::from_timestamp_opt(0, 0).unwrap(),
-			),
+			timestamp: DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc),
 			prev_hash: ZERO_HASH,
 			prev_root: ZERO_HASH,
 			output_root: ZERO_HASH,
@@ -318,16 +318,8 @@ fn read_block_header(reader: &mut dyn Reader) -> Result<BlockHeader, ser::Error>
 	let policy = reader.read_u8()?;
 	let bottles = Policy::read(reader)?;
 
-	if timestamp
-		> chrono::NaiveDate::MAX
-			.and_hms_opt(0, 0, 0)
-			.unwrap()
-			.timestamp()
-		|| timestamp
-			< chrono::NaiveDate::MIN
-				.and_hms_opt(0, 0, 0)
-				.unwrap()
-				.timestamp()
+	if timestamp > MAX_DATE.and_hms(0, 0, 0).timestamp()
+		|| timestamp < MIN_DATE.and_hms(0, 0, 0).timestamp()
 	{
 		return Err(ser::Error::CorruptedData);
 	}
@@ -343,10 +335,7 @@ fn read_block_header(reader: &mut dyn Reader) -> Result<BlockHeader, ser::Error>
 	Ok(BlockHeader {
 		version,
 		height,
-		timestamp: TimeZone::from_utc_datetime(
-			&Utc,
-			&NaiveDateTime::from_timestamp_opt(timestamp, 0).unwrap(),
-		),
+		timestamp: DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(timestamp, 0), Utc),
 		prev_hash,
 		prev_root,
 		output_root,
@@ -684,8 +673,7 @@ impl Block {
 		let version = consensus::header_version(height);
 
 		let now = Utc::now().timestamp();
-		let timestamp =
-			TimeZone::from_utc_datetime(&Utc, &NaiveDateTime::from_timestamp_opt(now, 0).unwrap());
+		let timestamp = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(now, 0), Utc);
 
 		// Now build the block with all the above information.
 		// Note: We have not validated the block here.
@@ -734,8 +722,7 @@ impl Block {
 
 		let height = prev.height + 1;
 		let now = Utc::now().timestamp();
-		let timestamp =
-			TimeZone::from_utc_datetime(&Utc, &NaiveDateTime::from_timestamp_opt(now, 0).unwrap());
+		let timestamp = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(now, 0), Utc);
 
 		// Now build the block with all the above information.
 		// Note: We have not validated the block here.

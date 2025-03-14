@@ -27,13 +27,13 @@ use keychain::{self, BlindingFactor};
 use std::cmp::Ordering;
 use std::cmp::{max, min};
 use std::convert::TryInto;
-//use std::sync::Arc;
+use std::sync::Arc;
 use std::{error, fmt};
 use util;
 use util::secp;
 use util::secp::pedersen::{Commitment, RangeProof};
 use util::static_secp_instance;
-//use util::RwLock;
+use util::RwLock;
 
 /// Various tx kernel variants.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -252,9 +252,11 @@ pub enum Error {
 }
 
 impl error::Error for Error {
-	// placeholder for better error messaging
-	// TODO: investigate using source() fn in std::error
-	// to better propogate errors through
+	fn description(&self) -> &str {
+		match *self {
+			_ => "some kind of keychain error",
+		}
+	}
 }
 
 impl fmt::Display for Error {

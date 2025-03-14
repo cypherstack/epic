@@ -17,7 +17,7 @@ use std::mem;
 use byteorder::{BigEndian, WriteBytesExt};
 use croaring::Bitmap;
 
-//use crate::global;
+use crate::global;
 use crate::pow::common::{CuckooParams, EdgeType, Link};
 use crate::pow::error::{Error, ErrorKind};
 use crate::pow::{PoWContext, Proof};
@@ -61,7 +61,7 @@ where
 			proof_size,
 			links: vec![],
 			adj_list: vec![],
-			visited: Bitmap::new(),
+			visited: Bitmap::create(),
 			solutions: vec![],
 			nil: T::max_value(),
 		})
@@ -72,7 +72,7 @@ where
 		self.links = Vec::with_capacity(2 * self.max_nodes as usize);
 		self.adj_list = vec![T::max_value(); 2 * self.max_nodes as usize];
 		self.solutions = vec![Proof::zero(self.proof_size); 1];
-		self.visited = Bitmap::new();
+		self.visited = Bitmap::create();
 		Ok(())
 	}
 
@@ -190,7 +190,7 @@ where
 		&mut self,
 		header: Vec<u8>,
 		nonce: Option<u64>,
-		_height: Option<u64>,
+		height: Option<u64>,
 		solve: bool,
 	) -> Result<(), Error> {
 		self.set_header_nonce_impl(header, nonce, solve)

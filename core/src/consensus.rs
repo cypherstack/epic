@@ -24,8 +24,9 @@ use crate::core::block::feijoada::{
 use crate::core::block::HeaderVersion;
 use crate::core::hash::{Hash, ZERO_HASH};
 use crate::global;
-use crate::pow::{Difficulty, PoWType};
+use crate::pow::{Difficulty, DifficultyNumber, PoWType};
 use std::cmp::{max, min};
+use std::collections::HashMap;
 
 /// A epic is divisible to 10^8 like bitcoin
 pub const EPIC_BASE: u64 = 100_000_000;
@@ -109,10 +110,6 @@ pub const MAINNET_FOUNDATION_HEIGHT: u64 = DAY_HEIGHT;
 pub const AUTOMATEDTEST_FOUNDATION_HEIGHT: u64 = 5;
 
 /// Set the height (and its multiples) where the foundation coinbase will be added to the block.
-/// Used in Usernet.
-pub const USERNET_FOUNDATION_HEIGHT: u64 = DAY_HEIGHT;
-
-/// Set the height (and its multiples) where the foundation coinbase will be added to the block.
 /// Used in the Floonet.
 pub const FLOONET_FOUNDATION_HEIGHT: u64 = DAY_HEIGHT;
 
@@ -121,7 +118,7 @@ pub fn foundation_height() -> u64 {
 	let param_ref = global::CHAIN_TYPE.read();
 	match *param_ref {
 		global::ChainTypes::AutomatedTesting => AUTOMATEDTEST_FOUNDATION_HEIGHT,
-		global::ChainTypes::UserTesting => USERNET_FOUNDATION_HEIGHT,
+		global::ChainTypes::UserTesting => AUTOMATEDTEST_FOUNDATION_HEIGHT,
 		global::ChainTypes::Floonet => FLOONET_FOUNDATION_HEIGHT,
 		_ => MAINNET_FOUNDATION_HEIGHT,
 	}
@@ -317,7 +314,7 @@ pub const MAX_BLOCK_WEIGHT: usize = 40_000;
 /// Mainnet first hard fork height
 /// Doubled from the previous hard coded value 1300000
 /// We might need to change this later for final release
-pub const MAINNET_FIRST_HARD_FORK: u64 = 9000000;
+pub const MAINNET_FIRST_HARD_FORK: u64 = 2600000;
 
 /// Floonet first hard fork height
 pub const FLOONET_FIRST_HARD_FORK: u64 = 25800;
@@ -425,8 +422,6 @@ pub const MIN_DIFFICULTY: u64 = DIFFICULTY_DAMP_FACTOR;
 
 /// RandomX Minimum difficulty (used for saturation)
 pub const MIN_DIFFICULTY_RANDOMX: u64 = 4000;
-/// RandomX Minimum difficulty (used for saturation on usernet)
-pub const MIN_DIFFICULTY_RANDOMX_TESTING: u64 = 1;
 /// RandomX Minimum difficulty until fork (used for saturation)
 pub const OLD_MIN_DIFFICULTY_RANDOMX: u64 = 5000;
 
@@ -562,11 +557,11 @@ where
 	(pow_type, b)
 }
 
-/*macro_rules! error_invalid_pow {
+macro_rules! error_invalid_pow {
 	($pow:expr) => {
 		panic!("The function next_hash_difficulty is only used by Progpow and RandomX, but it got a {:?}", $pow);
 	}
-}*/
+}
 
 /// Computes the proof-of-work difficulty that the next block should comply
 /// with. Takes an iterator over past block headers information, from latest
@@ -586,10 +581,6 @@ pub fn next_difficulty<T>(height: u64, prev_algo: PoWType, cursor: T) -> HeaderI
 where
 	T: IntoIterator<Item = HeaderInfo>,
 {
-	if crate::global::is_floonet() || crate::global::is_user_testing_mode() {
-		return HeaderInfo::from_diff_scaling(Difficulty::from_num(1), 1);
-	}
-
 	let diff_data = match prev_algo.clone() {
 		PoWType::Cuckatoo => global::difficulty_data_to_vector(cursor, DIFFICULTY_ADJUST_WINDOW),
 		PoWType::Cuckaroo => global::difficulty_data_to_vector(cursor, DIFFICULTY_ADJUST_WINDOW),
@@ -632,7 +623,7 @@ where
 }
 
 /// calculates the next difficulty level for cuckoo
-fn next_cuckoo_difficulty(_height: u64, pow: PoWType, diff_data: &Vec<HeaderInfo>) -> u64 {
+fn next_cuckoo_difficulty(height: u64, pow: PoWType, diff_data: &Vec<HeaderInfo>) -> u64 {
 	// Get the timestamp delta across the window
 
 	let ts_delta: u64 =
@@ -786,14 +777,8 @@ fn next_randomx_difficulty_era1(pow: PoWType, diff_data: &Vec<HeaderInfo>) -> u6
 		RX_CLAMP_FACTOR,
 	);
 
-	let param_ref = global::CHAIN_TYPE.read();
-	match *param_ref {
-		global::ChainTypes::UserTesting => max(
-			MIN_DIFFICULTY_RANDOMX_TESTING,
-			diff_sum * BLOCK_TIME_SEC / adj_ts,
-		),
-		_ => max(MIN_DIFFICULTY_RANDOMX, diff_sum * BLOCK_TIME_SEC / adj_ts),
-	}
+	// minimum difficulty avoids getting stuck due to dampening
+	max(MIN_DIFFICULTY_RANDOMX, diff_sum * BLOCK_TIME_SEC / adj_ts)
 }
 
 /// calculates the next difficulty era1 level for cuckoo

@@ -1,13 +1,13 @@
-// extern crate randomx;
+// extern crate stack_test_randomx;
 
 use std::marker::PhantomData;
 
 use crate::pow::common::EdgeType;
-use crate::pow::error::{Error};
+use crate::pow::error::{Error, ErrorKind};
 use crate::pow::{PoWContext, Proof};
-// use crate::util::RwLock;
+use crate::util::RwLock;
 
-// use randomx::{slow_hash, RxState};
+// use stack_test_randomx::{slow_hash, RxState};
 
 lazy_static! {
 	// pub static ref RX_STATE: RwLock<RxState> = RwLock::new(RxState::new());
@@ -59,8 +59,8 @@ pub fn rx_current_seed_height(height: u64) -> u64 {
 }
 
 pub struct RXContext<T>
-where
-	T: EdgeType,
+	where
+		T: EdgeType,
 {
 	pub seed: [u8; 32],
 	pub header: Vec<u8>,
@@ -69,8 +69,8 @@ where
 }
 
 pub fn new_randomx_ctx<T>(seed: [u8; 32]) -> Result<Box<dyn PoWContext<T>>, Error>
-where
-	T: EdgeType + 'static,
+	where
+		T: EdgeType + 'static,
 {
 	Ok(Box::new(RXContext {
 		phantom: PhantomData,
@@ -81,14 +81,14 @@ where
 }
 
 impl<T> PoWContext<T> for RXContext<T>
-where
-	T: EdgeType,
+	where
+		T: EdgeType,
 {
 	fn set_header_nonce(
 		&mut self,
 		header: Vec<u8>,
 		nonce: Option<u64>,
-		_height: Option<u64>,
+		height: Option<u64>,
 		_solve: bool,
 	) -> Result<(), Error> {
 		self.header = header;
@@ -106,7 +106,7 @@ where
 		unimplemented!()
 	}
 
-	fn verify(&mut self, _proof: &Proof) -> Result<(), Error> {
+	fn verify(&mut self, proof: &Proof) -> Result<(), Error> {
 		// let hash = {
 		// 	let mut state = RX_STATE.write();
 		// 	slow_hash(&mut state, &self.header, &self.seed)

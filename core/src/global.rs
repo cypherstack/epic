@@ -1,6 +1,6 @@
 // Copyright 2018 The Grin Developers
 //
-// Licensed under the &Apache License, Version 2.0 (the "License");
+// Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
@@ -20,18 +20,18 @@ use crate::consensus;
 use crate::consensus::HeaderInfo;
 use crate::consensus::{
 	graph_weight, BASE_EDGE_BITS, BLOCK_TIME_SEC, COINBASE_MATURITY, CUT_THROUGH_HORIZON,
-	DAY_HEIGHT, DEFAULT_MIN_EDGE_BITS, /*DIFFICULTY_ADJUST_WINDOW,*/ INITIAL_DIFFICULTY,
+	DAY_HEIGHT, DEFAULT_MIN_EDGE_BITS, DIFFICULTY_ADJUST_WINDOW, INITIAL_DIFFICULTY,
 	MAX_BLOCK_WEIGHT, PROOFSIZE, SECOND_POW_EDGE_BITS, STATE_SYNC_THRESHOLD,
 };
 use crate::core::block::feijoada::{AllowPolicy, Policy, PolicyConfig};
-use crate::pow::{self, /*new_cuckaroo_ctx,*/ new_cuckatoo_ctx, EdgeType, PoWContext};
+use crate::pow::{self, new_cuckaroo_ctx, new_cuckatoo_ctx, EdgeType, PoWContext};
 /// An enum collecting sets of parameters used throughout the
 /// code wherever mining is needed. This should allow for
 /// different sets of parameters for different purposes,
 /// e.g. CI, User testing, production values
 use crate::util::RwLock;
 use sha2::{Digest, Sha256};
-//use std::collections::HashMap;
+use std::collections::HashMap;
 use std::env;
 use std::fs::File;
 use std::path::Path;
@@ -115,10 +115,11 @@ pub const MAINNET_FOUNDATION_JSON_SHA256: &str =
 
 #[cfg(target_family = "unix")]
 pub const FLOONET_FOUNDATION_JSON_SHA256: &str =
-	"503a4d5ccf214df86722d14cc93c1779c54e5b827773c8a2f65888a06f2efbad";
+	"5a3a7584127dd31fba18eaeff1c551bfaa74b4e50e537a1e1904fe6730b17f5c";
 #[cfg(target_family = "windows")]
 pub const FLOONET_FOUNDATION_JSON_SHA256: &str =
-	"503a4d5ccf214df86722d14cc93c1779c54e5b827773c8a2f65888a06f2efbad";
+	"8ef0a84b35ec04576e583b7ed2f8a0d1becf4ee6ce67f9f3608deff8ad2ad103";
+
 
 /// Types of chain a server can run with, dictates the genesis block and
 /// and mining parameters used.
@@ -237,73 +238,33 @@ pub fn set_foundation_path(path: String) {
 /// If we are running floonet, it will look for the file foundation_floonet.json .
 pub fn use_alternative_path(path_str: String) -> String {
 	let check_path = Path::new(&path_str);
-	if check_path.exists() {
-		if check_foundation(path_str.clone()) {
-			return path_str;
+	if !check_path.exists() {
+		let mut p = env::current_exe().expect("Failed to get the executable's directory and no path to the foundation.json was provided!");
+		//removing the file from the path and going back 2 directories
+		for _ in 0..3 {
+			p.pop();
+		}
+		p.push("debian");
+		let foundation_name = match CHAIN_TYPE.read().clone() {
+			ChainTypes::Mainnet => "foundation.json",
+			_ => "foundation_floonet.json",
 		};
-	};
-	let mut p = env::current_exe().expect(
-		"Failed to get the executable's directory and no path to the foundation.json was provided!",
-	);
-	//if we run the "cargo test --release" the p contains "cucumber_..." in last folder
-	if p.file_stem()
-		.unwrap()
-		.to_str()
-		.unwrap()
-		.contains(&"cucumber")
-	{
-		return path_str;
-	}
-	//removing the file from the path and going back 2 directories
-	for _ in 0..3 {
-		p.pop();
-	}
-	p.push("debian");
-	let foundation_name = match CHAIN_TYPE.read().clone() {
-		ChainTypes::Mainnet => "foundation.json",
-		_ => "foundation_floonet.json",
-	};
-	p.push(foundation_name);
-	if check_path.exists() {
+		p.push(foundation_name);
 		warn!(
-			"Invalid foundation file!\nCheck if the file `{}` was not changed!",
-			check_path.display()
+			"The file `{}` was not found! Will try to use the alternative file `{}`!",
+			check_path.display(),
+			p.display()
 		);
-		println!(
-			"Invalid foundation file!\nCheck if the file `{}` was not changed!",
-			check_path.display()
-		);
+		p.to_str().expect("Failed to get the executable's directory and no path to the foundation.json was provided!").to_owned()
 	} else {
-		warn!("The file `{}` was not found!", check_path.display());
-		println!("The file `{}` was not found!", check_path.display());
+		path_str
 	}
-	warn!("Will try to use the alternative file `{}`!", p.display());
-	println!("Will try to use the alternative file `{}`!", p.display());
-	return p.to_str().expect("Failed to get the executable's directory and no path to the foundation.json was provided!").to_owned();
 }
 
 /// Get the current path to the foundation.json file (file with the foundation wallet outputs/kernels)
 pub fn get_foundation_path() -> Option<String> {
 	let foundation_path = FOUNDATION_FILE.read();
 	foundation_path.clone()
-}
-
-/// Check if the foundation file is correct
-pub fn check_foundation(path_str: String) -> bool {
-	let hash_to_compare = foundation_json_sha256();
-	let hash = get_file_sha256(&path_str);
-
-	println!(
-		"################ foundation sha: {:?},{:?}",
-		path_str, hash_to_compare
-	);
-	println!("################ file sha: {:?}", hash);
-
-	if hash.as_str() != hash_to_compare {
-		false
-	} else {
-		true
-	}
 }
 
 /// Set the policy configuration that will be used by the blockchain
@@ -325,16 +286,16 @@ pub fn get_allowed_policies() -> Vec<AllowPolicy> {
 }
 
 pub fn get_emitted_policy(height: u64) -> u8 {
-	let _policy_config = POLICY_CONFIG.read();
-	if height <= consensus::BLOCK_ERA_1 {
+	let policy_config = POLICY_CONFIG.read();
+	if (height <= consensus::BLOCK_ERA_1) {
 		0
-	} else if height <= consensus::BLOCK_ERA_2 {
+	} else if (height <= consensus::BLOCK_ERA_2) {
 		1
-	} else if height <= consensus::BLOCK_ERA_3 {
+	} else if (height <= consensus::BLOCK_ERA_3) {
 		2
-	} else if height <= consensus::BLOCK_ERA_4 {
+	} else if (height <= consensus::BLOCK_ERA_4) {
 		3
-	} else if height <= consensus::BLOCK_ERA_5 {
+	} else if (height <= consensus::BLOCK_ERA_5) {
 		4
 	} else {
 		5
@@ -646,16 +607,8 @@ impl Version {
 	}
 }
 
-/// Get the sha256 of file
 pub fn get_file_sha256(path: &str) -> String {
-	let file_open = File::open(path);
-	if file_open.is_err() {
-		println!(
-			"\nCouldn't open the foundation file!\nCheck if the file \"{}\" was not changed!",
-			path
-		);
-	};
-	let mut file = file_open.expect(
+	let mut file = File::open(path).expect(
 		format!(
 			"Error trying to read the foundation.json. Couldn't find/open the file {}!",
 			path
