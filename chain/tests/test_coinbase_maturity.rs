@@ -24,9 +24,9 @@ use self::util::RwLock;
 use chrono::Duration;
 use env_logger;
 use epic_chain as chain;
-use stack_epic_core as core;
-use stack_epic_keychain as keychain;
-use stack_epic_util as util;
+use epic_core as core;
+use epic_keychain as keychain;
+use epic_util as util;
 use std::fs;
 use std::sync::Arc;
 

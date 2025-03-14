@@ -13,8 +13,8 @@
 // limitations under the License.
 
 use self::core::core::hash::Hashed;
-use stack_epic_core as core;
-use stack_epic_util as util;
+use epic_core as core;
+use epic_util as util;
 
 mod chain_test_helper;
 

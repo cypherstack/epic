@@ -17,8 +17,8 @@ use self::core::core::hash::Hash;
 use self::core::ser::PMMRIndexHashable;
 use bit_vec::BitVec;
 use epic_chain as chain;
-use stack_epic_core as core;
-use stack_epic_util as util;
+use epic_core as core;
+use epic_util as util;
 
 #[test]
 fn test_bitmap_accumulator() {

@@ -29,9 +29,9 @@ extern crate serde_derive;
 extern crate log;
 extern crate bigint;
 
-use stack_epic_core as core;
-use stack_epic_keychain as keychain;
-use stack_epic_util as util;
+use epic_core as core;
+use epic_keychain as keychain;
+use epic_util as util;
 use failure;
 
 mod chain;
