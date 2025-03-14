@@ -27,9 +27,9 @@ extern crate bitflags;
 extern crate enum_primitive;
 
 #[macro_use]
-extern crate stack_epic_core as core;
-use stack_epic_chain as chain;
-use stack_epic_util as util;
+extern crate epic_core as core;
+use epic_chain as chain;
+use epic_util as util;
 
 #[macro_use]
 extern crate serde_derive;

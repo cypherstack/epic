@@ -21,7 +21,7 @@ use rand::thread_rng;
 
 use crate::core::ser::{self, Readable, Reader, Writeable, Writer};
 use crate::types::{Capabilities, PeerAddr, ReasonForBan};
-use stack_epic_store::{self, option_to_not_found, to_key, Error};
+use epic_store::{self, option_to_not_found, to_key, Error};
 
 const DB_NAME: &'static str = "peer";
 const STORE_SUBPATH: &'static str = "peers";
@@ -120,13 +120,13 @@ impl Readable for PeerData {
 
 /// Storage facility for peer data.
 pub struct PeerStore {
-	db: stack_epic_store::Store,
+	db: epic_store::Store,
 }
 
 impl PeerStore {
 	/// Instantiates a new peer store under the provided root path.
 	pub fn new(db_root: &str) -> Result<PeerStore, Error> {
-		let db = stack_epic_store::Store::new(db_root, Some(DB_NAME), Some(STORE_SUBPATH), None)?;
+		let db = epic_store::Store::new(db_root, Some(DB_NAME), Some(STORE_SUBPATH), None)?;
 		Ok(PeerStore { db: db })
 	}
 

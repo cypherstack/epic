@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use stack_epic_core as core;
+use epic_core as core;
 use epic_p2p as p2p;
 
-use stack_epic_util as util;
-use stack_epic_util::StopState;
+use epic_util as util;
+use epic_util::StopState;
 
 use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::sync::Arc;
