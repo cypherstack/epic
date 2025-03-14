@@ -8,8 +8,8 @@ publish = false
 cargo-fuzz = true
 
 [dependencies]
-stack_epic_core = { path = ".."}
-stack_epic_keychain = { path = "../../keychain"}
+epic_core = { package = "cs_epic_core", path = "..", version = "^1.0.1" }
+epic_keychain = { package = "cs_epic_keychain", path = "../../keychain", version = "^1.0.1" }
 [dependencies.libfuzzer-sys]
 git = "https://github.com/rust-fuzz/libfuzzer-sys.git"
 

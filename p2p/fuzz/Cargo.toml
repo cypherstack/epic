@@ -8,9 +8,9 @@ publish = false
 [package.metadata]
 cargo-fuzz = true
 
-[dependencies.epic_p2p]
+[dependencies.cs_epic_p2p]
 path = ".."
-[dependencies.stack_epic_core]
+[dependencies.cs_epic_core]
 path = "../../core"
 [dependencies.libfuzzer-sys]
 git = "https://github.com/rust-fuzz/libfuzzer-sys.git"

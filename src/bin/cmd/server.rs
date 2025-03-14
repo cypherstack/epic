@@ -27,7 +27,7 @@ use crate::core::global;
 use crate::p2p::{PeerAddr, Seeding};
 use crate::servers;
 use crate::tui::ui;
-use stack_epic_util::logger::LogEntry;
+use epic_util::logger::LogEntry;
 use std::sync::mpsc;
 
 /// wrap below to allow UI to clean up on stop
