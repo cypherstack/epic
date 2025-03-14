@@ -21,30 +21,24 @@ use self::core::core::transaction;
 use self::core::core::{
 	Block, BlockHeader, BlockSums, Committed, Transaction, TxKernel, Weighting,
 };
+use self::util::RwLock;
 use crate::types::{BlockChain, PoolEntry, PoolError};
 use epic_core as core;
+use epic_util as util;
 use std::cmp::Reverse;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
-//use self::util::RwLock;
-//use epic_util as util;
 
-pub struct Pool<B>
-where
-	B: BlockChain,
-{
+pub struct Pool {
 	/// Entries in the pool (tx + info + timer) in simple insertion order.
 	pub entries: Vec<PoolEntry>,
 	/// The blockchain
-	pub blockchain: Arc<B>,
+	pub blockchain: Arc<dyn BlockChain>,
 	pub name: String,
 }
 
-impl<B> Pool<B>
-where
-	B: BlockChain,
-{
-	pub fn new(chain: Arc<B>, name: String) -> Self {
+impl Pool {
+	pub fn new(chain: Arc<dyn BlockChain>, name: String) -> Pool {
 		Pool {
 			entries: vec![],
 			blockchain: chain,

@@ -30,32 +30,28 @@ use std::collections::VecDeque;
 use std::sync::Arc;
 
 /// Transaction pool implementation.
-pub struct TransactionPool<B, P>
-where
-	B: BlockChain,
-	P: PoolAdapter,
-{
+pub struct TransactionPool {
 	/// Pool Config
 	pub config: PoolConfig,
 	/// Our transaction pool.
-	pub txpool: Pool<B>,
+	pub txpool: Pool,
 	/// Our Dandelion "stempool".
-	pub stempool: Pool<B>,
+	pub stempool: Pool,
 	/// Cache of previous txs in case of a re-org.
 	pub reorg_cache: Arc<RwLock<VecDeque<PoolEntry>>>,
 	/// The blockchain
-	pub blockchain: Arc<B>,
+	pub blockchain: Arc<dyn BlockChain>,
 	/// The pool adapter
-	pub adapter: Arc<P>,
+	pub adapter: Arc<dyn PoolAdapter>,
 }
 
-impl<B, P> TransactionPool<B, P>
-where
-	B: BlockChain,
-	P: PoolAdapter,
-{
+impl TransactionPool {
 	/// Create a new transaction pool
-	pub fn new(config: PoolConfig, chain: Arc<B>, adapter: Arc<P>) -> Self {
+	pub fn new(
+		config: PoolConfig,
+		chain: Arc<dyn BlockChain>,
+		adapter: Arc<dyn PoolAdapter>,
+	) -> TransactionPool {
 		TransactionPool {
 			config,
 			txpool: Pool::new(chain.clone(), "txpool".to_string()),
@@ -164,9 +160,9 @@ where
 		// Any problems during stem, fallback to fluff.
 		if !stem
 			|| self
-				.add_to_stempool(entry.clone(), header)
-				.and_then(|_| self.adapter.stem_tx_accepted(&entry))
-				.is_err()
+			.add_to_stempool(entry.clone(), header)
+			.and_then(|_| self.adapter.stem_tx_accepted(&entry))
+			.is_err()
 		{
 			self.add_to_txpool(entry.clone(), header)?;
 			self.add_to_reorg_cache(entry.clone());
