@@ -18,7 +18,7 @@
 #![deny(non_camel_case_types)]
 #![deny(non_snake_case)]
 #![deny(unused_mut)]
-//#![warn(missing_docs)]
+#![warn(missing_docs)]
 
 #[macro_use]
 extern crate bitflags;
@@ -29,10 +29,10 @@ extern crate serde_derive;
 extern crate log;
 extern crate bigint;
 
+use failure;
 use epic_core as core;
 use epic_keychain as keychain;
 use epic_util as util;
-use failure;
 
 mod chain;
 mod error;

@@ -223,7 +223,9 @@ impl TxHashSet {
 					Err(ErrorKind::OutputNotFound.into())
 				}
 			}
-			Err(epic_store::Error::NotFoundErr(_)) => Err(ErrorKind::OutputNotFound.into()),
+			Err(epic_store::Error::NotFoundErr(_)) => {
+				Err(ErrorKind::OutputNotFound.into())
+			}
 			Err(e) => Err(ErrorKind::StoreErr(e, "txhashset unspent check".to_string()).into()),
 		}
 	}
@@ -456,8 +458,8 @@ pub fn extending_readonly<F, T>(
 	trees: &mut TxHashSet,
 	inner: F,
 ) -> Result<T, Error>
-where
-	F: FnOnce(&mut ExtensionPair<'_>, &Batch<'_>) -> Result<T, Error>,
+	where
+		F: FnOnce(&mut ExtensionPair<'_>, &Batch<'_>) -> Result<T, Error>,
 {
 	let commit_index = trees.commit_index.clone();
 	let batch = commit_index.batch()?;
@@ -498,8 +500,8 @@ pub fn utxo_view<F, T>(
 	trees: &TxHashSet,
 	inner: F,
 ) -> Result<T, Error>
-where
-	F: FnOnce(&UTXOView<'_>, &Batch<'_>) -> Result<T, Error>,
+	where
+		F: FnOnce(&UTXOView<'_>, &Batch<'_>) -> Result<T, Error>,
 {
 	let res: Result<T, Error>;
 	{
@@ -524,8 +526,8 @@ where
 /// We create a new db batch for this view and discard it (rollback)
 /// when we are done with the view.
 pub fn rewindable_kernel_view<F, T>(trees: &TxHashSet, inner: F) -> Result<T, Error>
-where
-	F: FnOnce(&mut RewindableKernelView<'_>, &Batch<'_>) -> Result<T, Error>,
+	where
+		F: FnOnce(&mut RewindableKernelView<'_>, &Batch<'_>) -> Result<T, Error>,
 {
 	let res: Result<T, Error>;
 	{
@@ -555,8 +557,8 @@ pub fn extending<'a, F, T>(
 	batch: &'a mut Batch<'_>,
 	inner: F,
 ) -> Result<T, Error>
-where
-	F: FnOnce(&mut ExtensionPair<'_>, &Batch<'_>) -> Result<T, Error>,
+	where
+		F: FnOnce(&mut ExtensionPair<'_>, &Batch<'_>) -> Result<T, Error>,
 {
 	let sizes: (u64, u64, u64);
 	let res: Result<T, Error>;
@@ -633,8 +635,8 @@ pub fn header_extending<'a, F, T>(
 	batch: &'a mut Batch<'_>,
 	inner: F,
 ) -> Result<T, Error>
-where
-	F: FnOnce(&mut HeaderExtension<'_>, &Batch<'_>) -> Result<T, Error>,
+	where
+		F: FnOnce(&mut HeaderExtension<'_>, &Batch<'_>) -> Result<T, Error>,
 {
 	let size: u64;
 	let res: Result<T, Error>;
@@ -774,7 +776,7 @@ impl<'a> HeaderExtension<'a> {
 
 		let header_pos = pmmr::insertion_to_pmmr_index(header.height + 1);
 		self.pmmr
-			.rewind(header_pos, &Bitmap::new())
+			.rewind(header_pos, &Bitmap::create())
 			.map_err(&ErrorKind::TxHashSetErr)?;
 
 		// Update our head to reflect the header we rewound to.
@@ -1193,7 +1195,7 @@ impl<'a> Extension<'a> {
 			.rewind(output_pos, &bitmap)
 			.map_err(&ErrorKind::TxHashSetErr)?;
 		self.kernel_pmmr
-			.rewind(kernel_pos, &Bitmap::new())
+			.rewind(kernel_pos, &Bitmap::create())
 			.map_err(&ErrorKind::TxHashSetErr)?;
 		Ok(())
 	}
@@ -1627,7 +1629,7 @@ fn input_pos_to_rewind(
 	head_header: &BlockHeader,
 	batch: &Batch<'_>,
 ) -> Result<Bitmap, Error> {
-	let mut bitmap = Bitmap::new();
+	let mut bitmap = Bitmap::create();
 	let mut current = head_header.clone();
 	while current.height > block_header.height {
 		if let Ok(block_bitmap) = batch.get_block_input_bitmap(&current.hash()) {
