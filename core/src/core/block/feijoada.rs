@@ -279,9 +279,9 @@ impl Default for PolicyConfig {
 		};
 
 		let mut policy_era4 = get_bottles_default();
-		policy_era4.insert(PoWType::RandomX, 5);
-		policy_era4.insert(PoWType::ProgPow, 40);
-		policy_era4.insert(PoWType::Cuckatoo, 55);
+		policy_era4.insert(PoWType::RandomX, 48);
+		policy_era4.insert(PoWType::ProgPow, 48);
+		policy_era4.insert(PoWType::Cuckatoo, 4);
 		policy_era4.insert(PoWType::Cuckaroo, 0);
 		let allowed_policy_era4 = AllowPolicy {
 			height: consensus::BLOCK_ERA_3 + 1,
@@ -289,9 +289,9 @@ impl Default for PolicyConfig {
 		};
 
 		let mut policy_era5 = get_bottles_default();
-		policy_era5.insert(PoWType::RandomX, 5);
-		policy_era5.insert(PoWType::ProgPow, 20);
-		policy_era5.insert(PoWType::Cuckatoo, 75);
+		policy_era5.insert(PoWType::RandomX, 48);
+		policy_era5.insert(PoWType::ProgPow, 48);
+		policy_era5.insert(PoWType::Cuckatoo, 4);
 		policy_era5.insert(PoWType::Cuckaroo, 0);
 		let allowed_policy_era5 = AllowPolicy {
 			height: consensus::BLOCK_ERA_4 + 1,
@@ -299,9 +299,9 @@ impl Default for PolicyConfig {
 		};
 
 		let mut policy_era6 = get_bottles_default();
-		policy_era6.insert(PoWType::RandomX, 5);
-		policy_era6.insert(PoWType::ProgPow, 10);
-		policy_era6.insert(PoWType::Cuckatoo, 85);
+		policy_era6.insert(PoWType::RandomX, 48);
+		policy_era6.insert(PoWType::ProgPow, 48);
+		policy_era6.insert(PoWType::Cuckatoo, 4);
 		policy_era6.insert(PoWType::Cuckaroo, 0);
 		let allowed_policy_era6 = AllowPolicy {
 			height: consensus::BLOCK_ERA_5 + 1,
@@ -404,14 +404,14 @@ impl Readable for Policy {
 	}
 }
 
-fn largest_allotment(policy: &Policy) -> PoWType {
+/*fn largest_allotment(policy: &Policy) -> PoWType {
 	let (algo, _) = policy.iter().max_by(|&(_, x), &(_, y)| x.cmp(y)).unwrap();
 	*algo
 }
 
 fn check_policy(policy: &Policy) {
 	assert_eq!(100, policy.values().fold(0, |acc, &x| x + acc));
-}
+}*/
 
 pub fn count_beans(bottles: &Policy) -> u32 {
 	std::cmp::max(bottles.values().fold(0, |acc, &x| x + acc), 1)

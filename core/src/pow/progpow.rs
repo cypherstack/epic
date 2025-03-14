@@ -2,18 +2,20 @@
 
 use std::marker::PhantomData;
 
-use crate::core::block::BlockHeader;
+//use crate::core::block::BlockHeader;
 use crate::pow::common::EdgeType;
-use crate::pow::error::{Error, ErrorKind};
+use crate::pow::error::{Error};
 use crate::pow::{PoWContext, Proof};
-use crate::util::RwLock;
+// use crate::util::RwLock;
 
-use keccak_hash::keccak_256;
+// use keccak_hash::keccak_256;
+use std::unimplemented;
+
 
 // use progpow::hardware::cpu::PpCPU;
 // use progpow::types::PpCompute;
 
-use bigint::uint::U256;
+//use bigint::uint::U256;
 
 lazy_static! {
 	// pub static ref PP_CPU: RwLock<PpCPU> = RwLock::new(PpCPU::new());
@@ -31,32 +33,31 @@ where
 	}))
 }
 
-fn transform_header(header: &[u8]) -> [u8; 32] {
-	// slice header
-	let sheader = &header[0..(header.len() - 8)];
+// fn transform_header(header: &[u8]) -> [u8; 32] {
+// 	// slice header
+// 	let sheader = &header[0..(header.len() - 8)];
+//
+// 	// copy header
+// 	let cheader = sheader.to_vec();
+//
+// 	let mut header = [0u8; 32];
+// 	keccak_256(&cheader, &mut header);
+//
+// 	header
+// }
 
-	// copy header
-	let cheader = sheader.to_vec();
-
-	let mut header = [0u8; 32];
-	keccak_256(&cheader, &mut header);
-
-	header
-}
-
-pub fn get_progpow_value(header: &[u8], height: u64, nonce: u64) -> [u8; 32] {
-	//let (value, _) = {
-	//	let progpow = PP_CPU.read();
-	//	progpow
-	//		.verify(&transform_header(&header), height, nonce)
-	//		.unwrap()
-	//};
-
-	//let digest: [u8; 32] = unsafe { ::std::mem::transmute(value) };
-
-	//digest
+pub fn get_progpow_value(_header: &[u8], _height: u64, _nonce: u64) -> [u8; 32] {
+	// let (value, _) = {
+	// 	let progpow = PP_CPU.read();
+	// 	progpow
+	// 		.verify(&transform_header(&header), height, nonce)
+	// 		.unwrap()
+	// };
+	//
+	// let digest: [u8; 32] = unsafe { ::std::mem::transmute(value) };
+	//
+	// digest
 	unimplemented!()
-
 }
 
 pub struct ProgPowContext<T>
@@ -100,7 +101,7 @@ where
 		unimplemented!()
 	}
 
-	fn verify(&mut self, proof: &Proof) -> Result<(), Error> {
+	fn verify(&mut self, _proof: &Proof) -> Result<(), Error> {
 		// let (_, tm) = {
 		// 	let progpow = PP_CPU.read();
 		// 	progpow

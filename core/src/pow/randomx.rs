@@ -3,9 +3,9 @@
 use std::marker::PhantomData;
 
 use crate::pow::common::EdgeType;
-use crate::pow::error::{Error, ErrorKind};
+use crate::pow::error::{Error};
 use crate::pow::{PoWContext, Proof};
-use crate::util::RwLock;
+// use crate::util::RwLock;
 
 // use randomx::{slow_hash, RxState};
 
@@ -88,7 +88,7 @@ where
 		&mut self,
 		header: Vec<u8>,
 		nonce: Option<u64>,
-		height: Option<u64>,
+		_height: Option<u64>,
 		_solve: bool,
 	) -> Result<(), Error> {
 		self.header = header;
@@ -106,7 +106,7 @@ where
 		unimplemented!()
 	}
 
-	fn verify(&mut self, proof: &Proof) -> Result<(), Error> {
+	fn verify(&mut self, _proof: &Proof) -> Result<(), Error> {
 		// let hash = {
 		// 	let mut state = RX_STATE.write();
 		// 	slow_hash(&mut state, &self.header, &self.seed)
