@@ -16,12 +16,11 @@
 use std::convert::From;
 use std::sync::Arc;
 
-use chrono::prelude::{DateTime, Utc};
+use chrono::prelude::Utc;
 use rand::prelude::*;
 
 use crate::api;
 use crate::chain;
-use crate::core::core::block::feijoada::PolicyConfig;
 use crate::core::global;
 use crate::core::global::ChainTypes;
 use crate::core::{consensus, core, libtx, pow};
@@ -30,7 +29,7 @@ use crate::p2p;
 use crate::pool;
 use crate::pool::types::DandelionConfig;
 use crate::store;
-use crate::util::RwLock;
+//use crate::util::RwLock;
 
 /// Error type wrapping underlying module errors.
 #[derive(Debug)]
@@ -173,6 +172,14 @@ pub struct ServerConfig {
 	/// Whether this node is a full archival node or a fast-sync, pruned node
 	pub archive_mode: Option<bool>,
 
+	/// Disable pow validation in checkpointed range, fully validate all blocks
+	/// Outside of checkpointed range
+	pub skip_pow_validation: Option<bool>,
+
+	/// Disable pow validation all the way to chaintip, only has effect when
+	/// skip_pow_validation is also set to 'true'
+	pub disable_checkpoints: Option<bool>,
+
 	/// Whether to skip the sync timeout on startup
 	/// (To assist testing on solo chains)
 	pub skip_sync_wait: Option<bool>,
@@ -184,6 +191,14 @@ pub struct ServerConfig {
 	/// Whether to run the TUI
 	/// if enabled, this will disable logging to stdout
 	pub run_tui: Option<bool>,
+
+	/// Only use PoWType::RandomX in PolicyConfig
+	/// Required for floonet, has no effect on Mainnet
+	pub only_randomx: Option<bool>,
+
+	/// Disable PoWType::ProgPow in PolicyConfig
+	/// For use with Floonet, Usernet. Has no effect on Mainnet
+	pub no_progpow: Option<bool>,
 
 	/// Whether to run the test miner (internal, cuckoo 16)
 	pub run_test_miner: Option<bool>,
@@ -229,11 +244,15 @@ impl Default for ServerConfig {
 			stratum_mining_config: Some(StratumServerConfig::default()),
 			chain_type: ChainTypes::default(),
 			archive_mode: Some(false),
+			skip_pow_validation: Some(false),
+			disable_checkpoints: Some(false),
 			chain_validation_mode: ChainValidationMode::default(),
 			pool_config: pool::PoolConfig::default(),
 			skip_sync_wait: Some(false),
 			header_sync_timeout: 10,
 			run_tui: Some(true),
+			only_randomx: Some(false),
+			no_progpow: Some(false),
 			run_test_miner: Some(false),
 			test_miner_wallet_url: None,
 			webhook_config: WebHooksConfig::default(),
@@ -296,7 +315,7 @@ impl Default for StratumServerConfig {
 				progpow_minimum_share_difficulty: consensus::MIN_DIFFICULTY_PROGPOW,
 				enable_stratum_server: Some(true),
 				stratum_server_addr: Some("127.0.0.1:3416".to_string()),
-			}
+			},
 		}
 	}
 }

@@ -16,11 +16,10 @@
 
 use std::cmp::Ordering;
 
-use crate::tui::chrono::prelude::{DateTime, NaiveDateTime, Utc};
+use crate::tui::chrono::prelude::{NaiveDateTime, TimeZone, Utc};
 use cursive::direction::Orientation;
 use cursive::event::Key;
-use cursive::traits::{Boxable, Identifiable};
-use cursive::view::View;
+use cursive::view::{Nameable, Resizable, View};
 use cursive::views::{
 	Button, Dialog, LinearLayout, OnEventView, Panel, ResizedView, StackView, TextView,
 };
@@ -34,14 +33,14 @@ use crate::tui::types::TUIStatusListener;
 
 use crate::core::pow::PoWType;
 use crate::servers::{DiffBlock, ServerStats, WorkerStats};
-use crate::tui::table::{TableView, TableViewItem};
+use cursive_table_view::{TableView, TableViewItem};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 enum StratumWorkerColumn {
 	Id,
 	IsConnected,
 	LastSeen,
-	PowDifficulty,
+	//	PowDifficulty,
 	NumAccepted,
 	NumRejected,
 	NumStale,
@@ -54,7 +53,7 @@ impl StratumWorkerColumn {
 			StratumWorkerColumn::Id => "Worker ID",
 			StratumWorkerColumn::IsConnected => "Connected",
 			StratumWorkerColumn::LastSeen => "Last Seen",
-			StratumWorkerColumn::PowDifficulty => "PowDifficulty",
+			//			StratumWorkerColumn::PowDifficulty => "PowDifficulty",
 			StratumWorkerColumn::NumAccepted => "Num Accepted",
 			StratumWorkerColumn::NumRejected => "Num Rejected",
 			StratumWorkerColumn::NumStale => "Num Stale",
@@ -65,20 +64,21 @@ impl StratumWorkerColumn {
 
 impl TableViewItem<StratumWorkerColumn> for WorkerStats {
 	fn to_column(&self, column: StratumWorkerColumn) -> String {
-		let naive_datetime = NaiveDateTime::from_timestamp(
+		let naive_datetime = NaiveDateTime::from_timestamp_opt(
 			self.last_seen
 				.duration_since(time::UNIX_EPOCH)
 				.unwrap()
 				.as_secs() as i64,
 			0,
-		);
-		let datetime: DateTime<Utc> = DateTime::from_utc(naive_datetime, Utc);
+		)
+		.unwrap();
+		let datetime = TimeZone::from_utc_datetime(&Utc, &naive_datetime);
 
 		match column {
 			StratumWorkerColumn::Id => self.id.clone(),
 			StratumWorkerColumn::IsConnected => self.is_connected.to_string(),
 			StratumWorkerColumn::LastSeen => datetime.to_string(),
-			StratumWorkerColumn::PowDifficulty => self.pow_difficulty.to_string(),
+			//			StratumWorkerColumn::PowDifficulty => self.pow_difficulty.to_string(),
 			StratumWorkerColumn::NumAccepted => self.num_accepted.to_string(),
 			StratumWorkerColumn::NumRejected => self.num_rejected.to_string(),
 			StratumWorkerColumn::NumStale => self.num_stale.to_string(),
@@ -94,7 +94,7 @@ impl TableViewItem<StratumWorkerColumn> for WorkerStats {
 			StratumWorkerColumn::Id => Ordering::Equal,
 			StratumWorkerColumn::IsConnected => Ordering::Equal,
 			StratumWorkerColumn::LastSeen => Ordering::Equal,
-			StratumWorkerColumn::PowDifficulty => Ordering::Equal,
+			//			StratumWorkerColumn::PowDifficulty => Ordering::Equal,
 			StratumWorkerColumn::NumAccepted => Ordering::Equal,
 			StratumWorkerColumn::NumRejected => Ordering::Equal,
 			StratumWorkerColumn::NumStale => Ordering::Equal,
@@ -108,7 +108,7 @@ enum DiffColumn {
 	Hash,
 	PoWType,
 	Difficulty,
-	SecondaryScaling,
+	//	SecondaryScaling,
 	Time,
 	Duration,
 }
@@ -120,7 +120,7 @@ impl DiffColumn {
 			DiffColumn::Hash => "Hash",
 			DiffColumn::PoWType => "Algorithm",
 			DiffColumn::Difficulty => "Network Difficulty",
-			DiffColumn::SecondaryScaling => "Sec. Scaling",
+			//			DiffColumn::SecondaryScaling => "Sec. Scaling",
 			DiffColumn::Time => "Block Time",
 			DiffColumn::Duration => "Duration",
 		}
@@ -129,15 +129,15 @@ impl DiffColumn {
 
 impl TableViewItem<DiffColumn> for DiffBlock {
 	fn to_column(&self, column: DiffColumn) -> String {
-		let naive_datetime = NaiveDateTime::from_timestamp(self.time as i64, 0);
-		let datetime: DateTime<Utc> = DateTime::from_utc(naive_datetime, Utc);
+		let naive_datetime = NaiveDateTime::from_timestamp_opt(self.time as i64, 0).unwrap();
+		let datetime = TimeZone::from_utc_datetime(&Utc, &naive_datetime);
 		let pow_type = self.algorithm.clone();
 		match column {
 			DiffColumn::Height => self.block_height.to_string(),
 			DiffColumn::Hash => self.block_hash.to_string(),
 			DiffColumn::PoWType => pow_type,
 			DiffColumn::Difficulty => self.difficulty.to_string(),
-			DiffColumn::SecondaryScaling => self.secondary_scaling.to_string(),
+			//			DiffColumn::SecondaryScaling => self.secondary_scaling.to_string(),
 			DiffColumn::Time => format!("{}", datetime).to_string(),
 			DiffColumn::Duration => format!("{}s", self.duration).to_string(),
 		}
@@ -152,7 +152,7 @@ impl TableViewItem<DiffColumn> for DiffBlock {
 			DiffColumn::Hash => Ordering::Equal,
 			DiffColumn::PoWType => Ordering::Equal,
 			DiffColumn::Difficulty => Ordering::Equal,
-			DiffColumn::SecondaryScaling => Ordering::Equal,
+			//			DiffColumn::SecondaryScaling => Ordering::Equal,
 			DiffColumn::Time => Ordering::Equal,
 			DiffColumn::Duration => Ordering::Equal,
 		}
@@ -189,9 +189,9 @@ impl TUIStatusListener for TUIMiningView {
 			.column(StratumWorkerColumn::LastSeen, "Last Seen", |c| {
 				c.width_percent(16)
 			})
-			// .column(StratumWorkerColumn::PowDifficulty, "Pow Difficulty", |c| {
-			// 	c.width_percent(12)
-			// })
+			/*.column(StratumWorkerColumn::PowDifficulty, "Pow Difficulty", |c| {
+				 c.width_percent(12)
+			})*/
 			.column(StratumWorkerColumn::NumAccepted, "Num Accepted", |c| {
 				c.width_percent(10)
 			})
@@ -272,9 +272,9 @@ impl TUIStatusListener for TUIMiningView {
 			.column(DiffColumn::Difficulty, "Difficulty", |c| {
 				c.width_percent(20)
 			})
-			// .column(DiffColumn::SecondaryScaling, "Sec. Scaling", |c| {
-			// 	c.width_percent(10)
-			// })
+			/*.column(DiffColumn::SecondaryScaling, "Sec. Scaling", |c| {
+				 c.width_percent(10)
+			})*/
 			.column(DiffColumn::Time, "Block Time", |c| c.width_percent(25))
 			.column(DiffColumn::Duration, "Duration", |c| c.width_percent(25));
 
@@ -327,7 +327,7 @@ impl TUIStatusListener for TUIMiningView {
 			TABLE_MINING_DIFF_STATUS,
 			|t: &mut TableView<DiffBlock, DiffColumn>| {
 				let current_row: usize = t.row().unwrap_or(0);
-				t.set_items(diff_stats);
+				t.set_items_stable(diff_stats);
 				if current_row <= t.len() - 1 {
 					t.set_selected_row(current_row);
 				} else {
@@ -364,11 +364,11 @@ impl TUIStatusListener for TUIMiningView {
 			} else {
 				"NaN".to_owned()
 			};
+
 		let stratum_network_difficulty = format!(
 			"Current Difficulty:    Cuckatoo: {}, ProgPow: {}, RandomX: {}",
 			cuckoo_diff, progpow_diff, randomx_diff,
 		);
-		// let stratum_edge_bits = format!("Cuckoo Size:           {}", stratum_stats.edge_bits);
 
 		c.call_on_name("stratum_config_status", |t: &mut TextView| {
 			t.set_content(stratum_enabled);
@@ -394,7 +394,7 @@ impl TUIStatusListener for TUIMiningView {
 		let _ = c.call_on_name(
 			TABLE_MINING_STATUS,
 			|t: &mut TableView<WorkerStats, StratumWorkerColumn>| {
-				t.set_items(worker_stats);
+				t.set_items_stable(worker_stats);
 				let current_row: usize = t.row().unwrap_or(0);
 				t.set_selected_row(current_row);
 			},

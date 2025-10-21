@@ -19,7 +19,7 @@
 #![deny(non_camel_case_types)]
 #![deny(non_snake_case)]
 #![deny(unused_mut)]
-#![warn(missing_docs)]
+//#![warn(missing_docs)]
 
 #[macro_use]
 extern crate serde_derive;
@@ -43,4 +43,4 @@ mod mining;
 
 pub use crate::common::stats::{DiffBlock, PeerStats, ServerStats, StratumStats, WorkerStats};
 pub use crate::common::types::{ServerConfig, StratumServerConfig};
-pub use crate::epic::server::Server;
+pub use crate::epic::server::{Server, ServerTxPool};

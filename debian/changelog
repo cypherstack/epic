@@ -1,3 +1,45 @@
+epic (3.6.0) focal; urgency=medium
+
+  [ Epic Team ]
+  * Version bump to match epic-wallet version 3.6.0
+
+ -- Epic Team <info@epiccash.com>  Wed, 27 Feb 2024 12:00:00 +0000
+
+epic (3.5.2) focal; urgency=medium
+
+  [ Epic Team ]
+  * Update cursive depdendency to 0.17
+  * Update tableview dependency to 0.14.0
+  * Resolve libgit2-sys dependabot vulnerability
+
+ -- Epic Team <info@epiccash.com>  Wed, 22 Feb 2024 12:00:00 +0000
+
+epic (3.5.0) focal; urgency=high
+
+  [ Epic Team ]
+  * Numerous dependency updates and refactoring
+  * Greatly reduced blockchain sync time
+  * Options to customize how much PoW to verify while syncing
+  * Reduce CPU usage for node server
+  * Fixes compiler warnings
+  * Improved stratum async code
+  * Greatly improved handling of OrphanBlockPool
+  * Addition of blockchain checkpoints for fastsync mode
+  * Tolerate reorgs in HeaderSync, fix endless loop
+
+ -- Epic Team <admin@epic.tech>  Wed, 21 Nov 2023 12:00:00 +0000
+
+epic (3.4.0) focal; urgency=high
+
+  [ Epic Team ]
+  * Mandatory update for mining policy in upcoming era
+  * Update mining algo policy to 48% ProgPow, 48% Randomx, 4% Cuckatoo for all future eras
+  * New sync_header process for faster initial chain sync
+  * Fixes peer discovery, changes seeding type to List
+  * Update ring dependency to 0.16.x
+
+ -- Epic Team <admin@epic.tech>  Wed, 14 Jun 2023 12:00:00 +0000
+
 epic (3.3.2) bionic; urgency=medium
 
   [ Epic Team ]
@@ -8,6 +50,8 @@ epic (3.3.2) bionic; urgency=medium
   * Add Testnet configuration file
   * Reproducible builds
   * New readme
+
+ -- Epic Team <admin@epic.tech>  Tue, 17 Jan 2023 12:00:00 +0000
 
 epic (3.0.9~alpha-1) UNRELEASED; urgency=low
 

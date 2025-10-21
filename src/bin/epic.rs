@@ -20,7 +20,6 @@ extern crate clap;
 #[macro_use]
 extern crate log;
 use crate::config::config::SERVER_CONFIG_FILE_NAME;
-use crate::core::core::feijoada::PolicyConfig;
 use crate::core::core::foundation;
 use crate::core::{consensus, global};
 use crate::util::init_logger;
@@ -33,6 +32,7 @@ use epic_p2p as p2p;
 use epic_servers as servers;
 use epic_util as util;
 use epic_util::logger::LogEntry;
+//use futures::channel::oneshot;
 use servers::foundation::create_foundation;
 use std::env;
 use std::path::Path;
@@ -83,17 +83,6 @@ fn real_main() -> i32 {
 		.get_matches();
 	let node_config;
 
-	// run floonet and usernet with custom PolicyConfig
-	if args.is_present("floonet") || args.is_present("usernet") {
-		if args.is_present("noprogpow") {
-			global::set_policy_config(PolicyConfig::no_progpow());
-		};
-
-		if args.is_present("onlyrandomx") {
-			global::set_policy_config(PolicyConfig::only_randomx());
-		};
-	};
-
 	let chain_type = if args.is_present("floonet") {
 		global::ChainTypes::Floonet
 	} else if args.is_present("usernet") {
@@ -112,7 +101,7 @@ fn real_main() -> i32 {
 				panic!("The generate value must be a positive integer: {}", e);
 			});
 
-		let url = taxes_args.value_of("from_wallet").unwrap().clone();
+		let url = taxes_args.value_of("from_wallet").unwrap();
 		let mut wallet_url = String::new();
 		if !url.contains("http") {
 			wallet_url.push_str("http://");
@@ -206,6 +195,11 @@ fn real_main() -> i32 {
 	let mut logging_config = config.members.as_mut().unwrap().logging.clone().unwrap();
 	logging_config.tui_running = config.members.as_mut().unwrap().server.run_tui;
 
+	let api_chan: &mut (
+		tokio::sync::oneshot::Sender<()>,
+		tokio::sync::oneshot::Receiver<()>,
+	) = Box::leak(Box::new(tokio::sync::oneshot::channel::<()>()));
+
 	let (logs_tx, logs_rx) = if logging_config.tui_running.unwrap() {
 		let (logs_tx, logs_rx) = mpsc::sync_channel::<LogEntry>(200);
 		(Some(logs_tx), Some(logs_rx))
@@ -231,7 +225,7 @@ fn real_main() -> i32 {
 	match args.subcommand() {
 		// server commands and options
 		("server", Some(server_args)) => {
-			cmd::server_command(Some(server_args), node_config.unwrap(), logs_rx)
+			cmd::server_command(Some(server_args), node_config.unwrap(), logs_rx, api_chan)
 		}
 
 		// client commands and options
@@ -250,6 +244,6 @@ fn real_main() -> i32 {
 		// If nothing is specified, try to just use the config file instead
 		// this could possibly become the way to configure most things
 		// with most command line options being phased out
-		_ => cmd::server_command(None, node_config.unwrap(), logs_rx),
+		_ => cmd::server_command(None, node_config.unwrap(), logs_rx, api_chan),
 	}
 }

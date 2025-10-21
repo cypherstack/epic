@@ -33,31 +33,50 @@ use crate::core::pow::Difficulty;
 use crate::core::{core, global};
 use crate::p2p;
 use crate::p2p::types::PeerInfo;
-use crate::pool;
+use crate::pool::{self, BlockChain, PoolAdapter};
 use crate::util::OneTime;
 use chrono::prelude::*;
 use chrono::Duration;
 use rand::prelude::*;
 
+/// Force full pow verification this many blocks from chaintip
+pub const POW_VERIFICATION_THRESHOLD: u64 = 1000;
+
+/// Ignore block broadcasts from chaintip, until we are less than
+/// this many blocks from chaintip, while syncing
+pub const BLOCK_BROADCAST_IGNORE_THRESHOLD: u64 = 200;
+
 /// Implementation of the NetAdapter for the . Gets notified when new
 /// blocks and transactions are received and forwards to the chain and pool
 /// implementations.
-pub struct NetToChainAdapter {
+pub struct NetToChainAdapter<B, P>
+where
+	B: BlockChain,
+	P: PoolAdapter,
+{
 	sync_state: Arc<SyncState>,
 	chain: Weak<chain::Chain>,
-	tx_pool: Arc<RwLock<pool::TransactionPool>>,
+	tx_pool: Arc<RwLock<pool::TransactionPool<B, P>>>,
 	peers: OneTime<Weak<p2p::Peers>>,
 	config: ServerConfig,
 	hooks: Vec<Box<dyn NetEvents + Send + Sync>>,
 }
 
-impl p2p::ChainAdapter for NetToChainAdapter {
+impl<B, P> p2p::ChainAdapter for NetToChainAdapter<B, P>
+where
+	B: BlockChain,
+	P: PoolAdapter,
+{
 	fn total_difficulty(&self) -> Result<Difficulty, chain::Error> {
 		Ok(self.chain().head()?.total_difficulty)
 	}
 
 	fn total_height(&self) -> Result<u64, chain::Error> {
 		Ok(self.chain().head()?.height)
+	}
+
+	fn total_header_height(&self) -> Result<u64, chain::Error> {
+		Ok(self.chain().header_head()?.height)
 	}
 
 	fn get_transaction(&self, kernel_hash: Hash) -> Option<core::Transaction> {
@@ -97,7 +116,7 @@ impl p2p::ChainAdapter for NetToChainAdapter {
 		let header = self.chain().head_header()?;
 
 		for hook in &self.hooks {
-			hook.on_transaction_received(&tx);
+			let _ = hook.on_transaction_received(&tx);
 		}
 
 		let tx_hash = tx.hash();
@@ -118,6 +137,20 @@ impl p2p::ChainAdapter for NetToChainAdapter {
 		peer_info: &PeerInfo,
 		opts: chain::Options,
 	) -> Result<bool, chain::Error> {
+		// TODO: guard against panic on unwrap, in case someone changes this constant
+		if self.sync_state.is_syncing() {
+			if b.header.height.clone()
+				> (self.chain().head()?.height + BLOCK_BROADCAST_IGNORE_THRESHOLD)
+			{
+				debug!(
+					"Ignoring full block {}, height({}), delivered during sync",
+					b.hash(),
+					b.header.height.clone()
+				);
+				return Ok(true);
+			}
+		}
+
 		if self.chain().block_exists(b.hash())? {
 			return Ok(true);
 		}
@@ -138,6 +171,18 @@ impl p2p::ChainAdapter for NetToChainAdapter {
 		cb: core::CompactBlock,
 		peer_info: &PeerInfo,
 	) -> Result<bool, chain::Error> {
+		if self.sync_state.is_syncing() {
+			if cb.header.height.clone()
+				> (self.chain().head()?.height + BLOCK_BROADCAST_IGNORE_THRESHOLD)
+			{
+				debug!(
+					"Ignoring compact block {}, height({}), delivered during sync",
+					cb.hash(),
+					cb.header.height.clone()
+				);
+				return Ok(true);
+			}
+		}
 		// No need to process this compact block if we have previously accepted the _full block_.
 		if self.chain().block_exists(cb.hash())? {
 			return Ok(true);
@@ -160,7 +205,7 @@ impl p2p::ChainAdapter for NetToChainAdapter {
 				Ok(block) => {
 					if !self.sync_state.is_syncing() {
 						for hook in &self.hooks {
-							hook.on_block_received(&block, &peer_info.addr);
+							let _ = hook.on_block_received(&block, &peer_info.addr);
 						}
 					}
 					self.process_block(block, peer_info, chain::Options::NONE)
@@ -202,7 +247,7 @@ impl p2p::ChainAdapter for NetToChainAdapter {
 				Ok(block) => {
 					if !self.sync_state.is_syncing() {
 						for hook in &self.hooks {
-							hook.on_block_received(&block, &peer_info.addr);
+							let _ = hook.on_block_received(&block, &peer_info.addr);
 						}
 					}
 					block
@@ -243,14 +288,22 @@ impl p2p::ChainAdapter for NetToChainAdapter {
 		if self.chain().block_exists(bh.hash())? {
 			return Ok(true);
 		}
+
+		// Also no need to process if we are syncing headers, we receive a new peer header broadcast
+		if matches!(self.sync_state.status(), SyncStatus::HeaderSync { .. }) {
+			//warn!("Ignoring broadcasted header for block: hash({}) height({})", bh.hash(), bh.height);
+			return Ok(true);
+		}
+
 		if !self.sync_state.is_syncing() {
 			for hook in &self.hooks {
-				hook.on_header_received(&bh, &peer_info.addr);
+				let _ = hook.on_header_received(&bh, &peer_info.addr);
 			}
 		}
 
 		// pushing the new block header through the header chain pipeline
 		// we will go ask for the block if this is a new header
+
 		let res = self.chain().process_block_header(&bh, chain::Options::NONE);
 
 		if let Err(e) = res {
@@ -276,24 +329,63 @@ impl p2p::ChainAdapter for NetToChainAdapter {
 		Ok(true)
 	}
 
+	// if headers are empty or refused, then peer is banned
 	fn headers_received(
 		&self,
 		bhs: &[core::BlockHeader],
 		peer_info: &PeerInfo,
 	) -> Result<bool, chain::Error> {
+		if bhs.len() == 0 {
+			//peer is banned
+			return Ok(false);
+		}
+		let start_time = Utc::now().timestamp();
 		info!(
-			"Received {} block headers from {}",
+			"Validate {} block headers from {}",
 			bhs.len(),
 			peer_info.addr
 		);
 
-		if bhs.len() == 0 {
-			return Ok(false);
+		let mut ctx_option = Options::SYNC;
+		let mut within_checkpointed_range = false;
+		let mut disable_checkpoints = false;
+
+		for header in bhs {
+			match self.chain().check_header_against_checkpoints(header) {
+				Ok(in_range) => {
+					within_checkpointed_range = in_range;
+				}
+				Err(e) => {
+					return Err(e);
+				}
+			}
 		}
 
-		// try to add headers to our header chain
-		match self.chain().sync_block_headers(bhs, chain::Options::SYNC) {
-			Ok(_) => Ok(true),
+		if self.config.disable_checkpoints.is_some() {
+			if self.config.disable_checkpoints.unwrap() {
+				disable_checkpoints = true;
+			}
+		}
+
+		if self.config.skip_pow_validation.is_some() {
+			if self.config.skip_pow_validation.unwrap() {
+				if within_checkpointed_range || disable_checkpoints {
+					// only skip pow validation if setting is toggled AND we are within checkpointed range
+					// OR if we have 'skip_pow_validation' AND 'disable_checkpoints' toggled
+					// fully validate pow for all other cases
+					ctx_option = Options::SKIP_POW;
+				}
+			}
+		}
+
+		match self.chain().sync_block_headers(bhs, ctx_option) {
+			Ok(_) => {
+				info!(
+					"------------ Validation required: {:?} sec ------------",
+					Utc::now().timestamp() - start_time,
+				);
+				return Ok(true);
+			}
 			Err(e) => {
 				debug!("Block headers refused by chain: {:?}", e);
 				if e.is_bad_data() {
@@ -305,7 +397,11 @@ impl p2p::ChainAdapter for NetToChainAdapter {
 		}
 	}
 
-	fn locate_headers(&self, locator: &[Hash]) -> Result<Vec<core::BlockHeader>, chain::Error> {
+	fn locate_headers(
+		&self,
+		locator: &[Hash],
+		offset: &u8,
+	) -> Result<Vec<core::BlockHeader>, chain::Error> {
 		debug!("locator: {:?}", locator);
 
 		let header = match self.find_common_header(locator) {
@@ -320,13 +416,16 @@ impl p2p::ChainAdapter for NetToChainAdapter {
 
 		// looks like we know one, getting as many following headers as allowed
 		let hh = header.height;
+		let offset: u64 = offset.clone() as u64 * p2p::MAX_BLOCK_HEADERS as u64;
+		debug!("Locate headers with offset request: {:?}", offset);
+
 		let mut headers = vec![];
 		for h in (hh + 1)..=(hh + (p2p::MAX_BLOCK_HEADERS as u64)) {
-			if h > max_height {
+			if h + offset > max_height {
 				break;
 			}
 
-			if let Ok(hash) = header_pmmr.get_header_hash_by_height(h) {
+			if let Ok(hash) = header_pmmr.get_header_hash_by_height(h + offset) {
 				let header = self.chain().get_block_header(&hash)?;
 				headers.push(header);
 			} else {
@@ -364,10 +463,10 @@ impl p2p::ChainAdapter for NetToChainAdapter {
 	/// at the provided block hash.
 	fn txhashset_read(&self, h: Hash) -> Option<p2p::TxHashSetRead> {
 		match self.chain().txhashset_read(h.clone()) {
-			Ok((out_index, kernel_index, read)) => Some(p2p::TxHashSetRead {
-				output_index: out_index,
-				kernel_index: kernel_index,
-				reader: read,
+			Ok((output_index, kernel_index, reader)) => Some(p2p::TxHashSetRead {
+				output_index,
+				kernel_index,
+				reader,
 			}),
 			Err(e) => {
 				warn!("Couldn't produce txhashset data for block {}: {:?}", h, e);
@@ -462,15 +561,19 @@ impl p2p::ChainAdapter for NetToChainAdapter {
 	}
 }
 
-impl NetToChainAdapter {
+impl<B, P> NetToChainAdapter<B, P>
+where
+	B: BlockChain,
+	P: PoolAdapter,
+{
 	/// Construct a new NetToChainAdapter instance
 	pub fn new(
 		sync_state: Arc<SyncState>,
 		chain: Arc<chain::Chain>,
-		tx_pool: Arc<RwLock<pool::TransactionPool>>,
+		tx_pool: Arc<RwLock<pool::TransactionPool<B, P>>>,
 		config: ServerConfig,
 		hooks: Vec<Box<dyn NetEvents + Send + Sync>>,
-	) -> NetToChainAdapter {
+	) -> Self {
 		NetToChainAdapter {
 			sync_state,
 			chain: Arc::downgrade(&chain),
@@ -540,8 +643,50 @@ impl NetToChainAdapter {
 
 		let bhash = b.hash();
 		let previous = self.chain().get_previous_header(&b.header);
+		let within_checkpointed_range;
+		let mut disable_checkpoints = false;
+		let mut outside_forced_pow_threshold = false;
+		let mut options = opts;
 
-		match self.chain().process_block(b, opts) {
+		let network_height = self.chain().header_head()?.height;
+		// ensure we check proof-of-work for last (POW_VERIFICATION_THRESHOLD) blocks from network chaintip
+		let check_pow_dyn_threshold = network_height - POW_VERIFICATION_THRESHOLD;
+
+		if self.config.disable_checkpoints.is_some() {
+			if self.config.disable_checkpoints.unwrap() {
+				disable_checkpoints = true;
+				if b.header.height < check_pow_dyn_threshold {
+					// don't honor disable_checkpoints once we hit dynamic threshold
+					outside_forced_pow_threshold = true;
+				}
+			}
+		}
+
+		match self.chain().check_header_against_checkpoints(&b.header) {
+			Ok(in_range) => {
+				within_checkpointed_range = in_range;
+			}
+			Err(e) => {
+				return Err(e);
+			}
+		}
+
+		if self.config.skip_pow_validation.is_some() {
+			if self.config.skip_pow_validation.unwrap() {
+				if within_checkpointed_range
+					|| (disable_checkpoints && outside_forced_pow_threshold)
+				{
+					// skip pow validation if skip_pow_validation = true, and 1 of 2 conditions holds:
+					// 1.) we are within checkpointed range
+					// 2.) we have disable_checkpoints = true AND we are more than 1k blocks from chaintip
+					// Fully verify proof-of-work, for all other cases
+					options = chain::Options::SKIP_POW;
+				}
+				//warn!("b.header.height({}), dyn_threshold({}), options({:?})", b.header.height, check_pow_dyn_threshold, options);
+			}
+		}
+
+		match self.chain().process_block(b, options) {
 			Ok(_) => {
 				self.validate_chain(bhash);
 				self.check_compact();
@@ -695,18 +840,26 @@ impl NetToChainAdapter {
 /// Implementation of the ChainAdapter for the network. Gets notified when the
 ///  accepted a new block, asking the pool to update its state and
 /// the network to broadcast the block
-pub struct ChainToPoolAndNetAdapter {
-	tx_pool: Arc<RwLock<pool::TransactionPool>>,
+pub struct ChainToPoolAndNetAdapter<B, P>
+where
+	B: BlockChain,
+	P: PoolAdapter,
+{
+	tx_pool: Arc<RwLock<pool::TransactionPool<B, P>>>,
 	peers: OneTime<Weak<p2p::Peers>>,
 	hooks: Vec<Box<dyn ChainEvents + Send + Sync>>,
 }
 
-impl ChainAdapter for ChainToPoolAndNetAdapter {
+impl<B, P> ChainAdapter for ChainToPoolAndNetAdapter<B, P>
+where
+	B: BlockChain,
+	P: PoolAdapter,
+{
 	fn block_accepted(&self, b: &core::Block, status: BlockStatus, opts: Options) {
 		// not broadcasting blocks received through sync
-		if !opts.contains(chain::Options::SYNC) {
+		if !opts.contains(chain::Options::SYNC) && !opts.contains(chain::Options::SKIP_POW) {
 			for hook in &self.hooks {
-				hook.on_block_accepted(b, &status);
+				let _ = hook.on_block_accepted(b, &status);
 			}
 			// If we mined the block then we want to broadcast the compact block.
 			// If we received the block from another node then broadcast "header first"
@@ -745,16 +898,20 @@ impl ChainAdapter for ChainToPoolAndNetAdapter {
 	}
 }
 
-impl ChainToPoolAndNetAdapter {
+impl<B, P> ChainToPoolAndNetAdapter<B, P>
+where
+	B: BlockChain,
+	P: PoolAdapter,
+{
 	/// Construct a ChainToPoolAndNetAdapter instance.
 	pub fn new(
-		tx_pool: Arc<RwLock<pool::TransactionPool>>,
+		tx_pool: Arc<RwLock<pool::TransactionPool<B, P>>>,
 		hooks: Vec<Box<dyn ChainEvents + Send + Sync>>,
-	) -> ChainToPoolAndNetAdapter {
+	) -> Self {
 		ChainToPoolAndNetAdapter {
 			tx_pool,
 			peers: OneTime::new(),
-			hooks: hooks,
+			hooks,
 		}
 	}
 

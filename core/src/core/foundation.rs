@@ -1,10 +1,11 @@
-use crate::consensus::{first_fork_height, foundation_height, foundation_index, header_version};
+use crate::consensus::{
+	/*first_fork_height, foundation_height,*/ foundation_index, header_version,
+};
 use crate::core::{HeaderVersion, Output, TxKernel};
 use crate::global::get_foundation_path;
 use crate::keychain::Identifier;
 use crate::serde::{Deserialize, Serialize};
 use serde_json;
-use std::error::Error;
 use std::fs::{create_dir, File};
 use std::io::prelude::*;
 use std::io::SeekFrom;
@@ -47,7 +48,7 @@ pub fn save_in_disk(serialization: String, path: &Path) {
 	path = path.join("foundation.json");
 	println!("Saving the file as: {}", path.display());
 	let mut file = match File::create(&path) {
-		Err(why) => panic!("Couldn't create {}: {}", path.display(), why.description()),
+		Err(why) => panic!("Couldn't create {}: {}", path.display(), why.to_string()),
 		Ok(file) => file,
 	};
 	file.write_all(serialization.as_bytes())
@@ -60,7 +61,7 @@ fn get_foundation_tx_version_size(version: HeaderVersion) -> usize {
 	}
 }
 
-fn get_foundation_tx_offset(index: u64, version: HeaderVersion) -> u64 {
+fn get_foundation_tx_offset(index: u64, _version: HeaderVersion) -> u64 {
 	let size = index * (FOUNDATION_COINBASE_SIZE_1 as u64);
 
 	if cfg!(windows) {

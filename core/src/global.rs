@@ -20,18 +20,18 @@ use crate::consensus;
 use crate::consensus::HeaderInfo;
 use crate::consensus::{
 	graph_weight, BASE_EDGE_BITS, BLOCK_TIME_SEC, COINBASE_MATURITY, CUT_THROUGH_HORIZON,
-	DAY_HEIGHT, DEFAULT_MIN_EDGE_BITS, DIFFICULTY_ADJUST_WINDOW, INITIAL_DIFFICULTY,
+	DAY_HEIGHT, DEFAULT_MIN_EDGE_BITS, /*DIFFICULTY_ADJUST_WINDOW,*/ INITIAL_DIFFICULTY,
 	MAX_BLOCK_WEIGHT, PROOFSIZE, SECOND_POW_EDGE_BITS, STATE_SYNC_THRESHOLD,
 };
 use crate::core::block::feijoada::{AllowPolicy, Policy, PolicyConfig};
-use crate::pow::{self, new_cuckaroo_ctx, new_cuckatoo_ctx, EdgeType, PoWContext};
+use crate::pow::{self, /*new_cuckaroo_ctx,*/ new_cuckatoo_ctx, EdgeType, PoWContext};
 /// An enum collecting sets of parameters used throughout the
 /// code wherever mining is needed. This should allow for
 /// different sets of parameters for different purposes,
 /// e.g. CI, User testing, production values
 use crate::util::RwLock;
 use sha2::{Digest, Sha256};
-use std::collections::HashMap;
+//use std::collections::HashMap;
 use std::env;
 use std::fs::File;
 use std::path::Path;
@@ -115,10 +115,10 @@ pub const MAINNET_FOUNDATION_JSON_SHA256: &str =
 
 #[cfg(target_family = "unix")]
 pub const FLOONET_FOUNDATION_JSON_SHA256: &str =
-	"5a3a7584127dd31fba18eaeff1c551bfaa74b4e50e537a1e1904fe6730b17f5c";
+	"503a4d5ccf214df86722d14cc93c1779c54e5b827773c8a2f65888a06f2efbad";
 #[cfg(target_family = "windows")]
 pub const FLOONET_FOUNDATION_JSON_SHA256: &str =
-	"8ef0a84b35ec04576e583b7ed2f8a0d1becf4ee6ce67f9f3608deff8ad2ad103";
+	"503a4d5ccf214df86722d14cc93c1779c54e5b827773c8a2f65888a06f2efbad";
 
 /// Types of chain a server can run with, dictates the genesis block and
 /// and mining parameters used.
@@ -246,7 +246,12 @@ pub fn use_alternative_path(path_str: String) -> String {
 		"Failed to get the executable's directory and no path to the foundation.json was provided!",
 	);
 	//if we run the "cargo test --release" the p contains "cucumber_..." in last folder
-	if p.file_stem().unwrap().to_str().unwrap().contains(&"cucumber") {
+	if p.file_stem()
+		.unwrap()
+		.to_str()
+		.unwrap()
+		.contains(&"cucumber")
+	{
 		return path_str;
 	}
 	//removing the file from the path and going back 2 directories
@@ -287,6 +292,13 @@ pub fn get_foundation_path() -> Option<String> {
 pub fn check_foundation(path_str: String) -> bool {
 	let hash_to_compare = foundation_json_sha256();
 	let hash = get_file_sha256(&path_str);
+
+	println!(
+		"################ foundation sha: {:?},{:?}",
+		path_str, hash_to_compare
+	);
+	println!("################ file sha: {:?}", hash);
+
 	if hash.as_str() != hash_to_compare {
 		false
 	} else {
@@ -313,16 +325,16 @@ pub fn get_allowed_policies() -> Vec<AllowPolicy> {
 }
 
 pub fn get_emitted_policy(height: u64) -> u8 {
-	let policy_config = POLICY_CONFIG.read();
-	if (height <= consensus::BLOCK_ERA_1) {
+	let _policy_config = POLICY_CONFIG.read();
+	if height <= consensus::BLOCK_ERA_1 {
 		0
-	} else if (height <= consensus::BLOCK_ERA_2) {
+	} else if height <= consensus::BLOCK_ERA_2 {
 		1
-	} else if (height <= consensus::BLOCK_ERA_3) {
+	} else if height <= consensus::BLOCK_ERA_3 {
 		2
-	} else if (height <= consensus::BLOCK_ERA_4) {
+	} else if height <= consensus::BLOCK_ERA_4 {
 		3
-	} else if (height <= consensus::BLOCK_ERA_5) {
+	} else if height <= consensus::BLOCK_ERA_5 {
 		4
 	} else {
 		5

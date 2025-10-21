@@ -23,14 +23,14 @@ use chrono::prelude::*;
 
 use cursive::direction::Orientation;
 use cursive::event::Key;
-use cursive::traits::{Boxable, Identifiable};
-use cursive::view::View;
+use cursive::view::{Nameable, Resizable};
 use cursive::views::{Dialog, LinearLayout, OnEventView, ResizedView, TextView};
 use cursive::Cursive;
+use cursive::View;
 
 use crate::tui::constants::{MAIN_MENU, TABLE_PEER_STATUS, VIEW_PEER_SYNC};
-use crate::tui::table::{TableView, TableViewItem};
 use crate::tui::types::TUIStatusListener;
+use cursive_table_view::{TableView, TableViewItem};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum PeerColumn {
@@ -101,7 +101,7 @@ impl TableViewItem<PeerColumn> for PeerStats {
 			let other_sum = other_recv_bytes + other_sent_bytes;
 
 			curr_sum.cmp(&other_sum)
-		};
+		}
 
 		let sort_by_addr = || self.addr.cmp(&other.addr);
 
@@ -183,7 +183,7 @@ impl TUIStatusListener for TUIPeerView {
 			TABLE_PEER_STATUS,
 			|t: &mut TableView<PeerStats, PeerColumn>| {
 				//let current_row:usize = t.row().unwrap_or(0);
-				t.set_items(stats.peer_stats.clone());
+				t.set_items_stable(stats.peer_stats.clone());
 				//t.set_selected_row(t.len()-1);
 				/*if current_row <= t.len()-1{
 					t.set_selected_row(current_row);

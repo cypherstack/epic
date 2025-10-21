@@ -1,13 +1,12 @@
 [package]
-name = "epic_chain"
-version = "3.3.2"
-authors = ["Epic Foundation <epiccash@brickabode.com>"]
+name = "stack_epic_chain"
+version = "3.6.0"
+authors = ["Epic Foundation <info@epiccash.com>"]
 description = "Chain implementation for epic, a simple, private and scalable cryptocurrency implementation based on the MimbleWimble chain format."
 license = "Apache-2.0"
-repository = "https://github.com/EpicCash/epic"
-keywords = ["crypto", "epic", "mimblewimble"]
+repository = "https://github.com/cypherstack/epic"
 workspace = ".."
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 bit-vec = "0.6"
@@ -15,22 +14,20 @@ bitflags = "1"
 byteorder = "1"
 failure = "0.1"
 failure_derive = "0.1"
-# FIRME: In the long run we should fix the conflicts and use a recent version of croaring
-# croaring = "0.4.5"
-croaring = { git = "https://github.com/EricShimizuKarbstein/croaring-rs.git", branch = "not-native-march", version = "0.3.10" }
+croaring = "1.0.1"
 log = "0.4"
 serde = "1"
 serde_derive = "1"
-chrono = "0.4.4"
+chrono = "0.4.31"
 lru-cache = "0.1"
 lazy_static = "1"
 regex = "1"
 bigint = "4.4.1"
 
-epic_core = { path = "../core", version = "3.3.2" }
-epic_keychain = { path = "../keychain", version = "3.3.2" }
-epic_store = { path = "../store", version = "3.3.2" }
-epic_util = { path = "../util", version = "3.3.2" }
+epic_core = { package = "stack_epic_core", path = "../core", version = "3.6.0" }
+epic_keychain = { package = "stack_epic_keychain", path = "../keychain", version = "3.6.0" }
+epic_store = { package = "stack_epic_store", path = "../store", version = "3.6.0" }
+epic_util = { package = "stack_epic_util", path = "../util", version = "3.6.0" }
 
 [dev-dependencies]
 env_logger = "0.5"

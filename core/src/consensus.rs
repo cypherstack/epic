@@ -24,9 +24,8 @@ use crate::core::block::feijoada::{
 use crate::core::block::HeaderVersion;
 use crate::core::hash::{Hash, ZERO_HASH};
 use crate::global;
-use crate::pow::{Difficulty, DifficultyNumber, PoWType};
+use crate::pow::{Difficulty, PoWType};
 use std::cmp::{max, min};
-use std::collections::HashMap;
 
 /// A epic is divisible to 10^8 like bitcoin
 pub const EPIC_BASE: u64 = 100_000_000;
@@ -318,13 +317,13 @@ pub const MAX_BLOCK_WEIGHT: usize = 40_000;
 /// Mainnet first hard fork height
 /// Doubled from the previous hard coded value 1300000
 /// We might need to change this later for final release
-pub const MAINNET_FIRST_HARD_FORK: u64 = 2600000;
+pub const MAINNET_FIRST_HARD_FORK: u64 = 9000000;
 
 /// Floonet first hard fork height
 pub const FLOONET_FIRST_HARD_FORK: u64 = 25800;
 
 /// AutomatedTesting and UserTesting first hard fork height.
-pub const TESTING_FIRST_HARD_FORK: u64 = 25800;
+pub const TESTING_FIRST_HARD_FORK: u64 = 6;
 
 /// Get the height of the first epic hard fork
 pub fn first_fork_height() -> u64 {
@@ -353,7 +352,7 @@ pub fn valid_header_version(height: u64, version: HeaderVersion) -> bool {
 }
 
 ///defines the block height at wich the difficulty adjustment era changes for testing
-pub const TESTING_DIFFICULTY_ERA: u64 = 1;
+pub const TESTING_DIFFICULTY_ERA: u64 = 50;
 ///defines the block height at wich the difficulty adjustment era changes for floonet
 pub const FLOONET_DIFFICULTY_ERA: u64 = 200;
 ///defines the block height at wich the difficulty adjustment era changes
@@ -563,11 +562,11 @@ where
 	(pow_type, b)
 }
 
-macro_rules! error_invalid_pow {
+/*macro_rules! error_invalid_pow {
 	($pow:expr) => {
 		panic!("The function next_hash_difficulty is only used by Progpow and RandomX, but it got a {:?}", $pow);
 	}
-}
+}*/
 
 /// Computes the proof-of-work difficulty that the next block should comply
 /// with. Takes an iterator over past block headers information, from latest
@@ -633,7 +632,7 @@ where
 }
 
 /// calculates the next difficulty level for cuckoo
-fn next_cuckoo_difficulty(height: u64, pow: PoWType, diff_data: &Vec<HeaderInfo>) -> u64 {
+fn next_cuckoo_difficulty(_height: u64, pow: PoWType, diff_data: &Vec<HeaderInfo>) -> u64 {
 	// Get the timestamp delta across the window
 
 	let ts_delta: u64 =
@@ -790,12 +789,11 @@ fn next_randomx_difficulty_era1(pow: PoWType, diff_data: &Vec<HeaderInfo>) -> u6
 	let param_ref = global::CHAIN_TYPE.read();
 	match *param_ref {
 		global::ChainTypes::UserTesting => max(
-			MIN_DIFFICULTY_RANDOMX_TESTING, 
+			MIN_DIFFICULTY_RANDOMX_TESTING,
 			diff_sum * BLOCK_TIME_SEC / adj_ts,
 		),
-		_ => max(MIN_DIFFICULTY_RANDOMX, diff_sum * BLOCK_TIME_SEC / adj_ts)
+		_ => max(MIN_DIFFICULTY_RANDOMX, diff_sum * BLOCK_TIME_SEC / adj_ts),
 	}
-
 }
 
 /// calculates the next difficulty era1 level for cuckoo

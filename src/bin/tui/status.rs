@@ -16,8 +16,7 @@
 
 use chrono::prelude::Utc;
 use cursive::direction::Orientation;
-use cursive::traits::Identifiable;
-use cursive::view::View;
+use cursive::view::{Nameable, View};
 use cursive::views::{LinearLayout, ResizedView, TextView};
 use cursive::Cursive;
 
@@ -25,7 +24,7 @@ use crate::tui::constants::VIEW_BASIC_STATUS;
 use crate::tui::types::TUIStatusListener;
 
 use crate::chain::SyncStatus;
-use crate::core::pow::{DifficultyNumber, PoWType};
+use crate::core::pow::PoWType;
 use crate::servers::ServerStats;
 
 const NANO_TO_MILLIS: f64 = 1.0 / 1_000_000.0;
@@ -63,8 +62,8 @@ impl TUIStatusView {
 					} else {
 						0
 					};
-					let start = prev_update_time.timestamp_nanos();
-					let fin = Utc::now().timestamp_nanos();
+					let start = prev_update_time.timestamp_nanos_opt().unwrap();
+					let fin = Utc::now().timestamp_nanos_opt().unwrap();
 					let dur_ms = (fin - start) as f64 * NANO_TO_MILLIS;
 
 					format!("Sync step 2/7: Downloading {}(MB) chain state for state sync: {}% at {:.1?}(kB/s)",
@@ -253,6 +252,7 @@ impl TUIStatusListener for TUIStatusView {
 		let cuckoo_diff = stats.chain_stats.total_difficulty.to_num(PoWType::Cuckatoo);
 		let progpow_diff = stats.chain_stats.total_difficulty.to_num(PoWType::ProgPow);
 		let randomx_diff = stats.chain_stats.total_difficulty.to_num(PoWType::RandomX);
+
 		let head_total_difficulty = format!(
 			"Cuckatoo: {}, ProgPow: {}, RandomX: {}",
 			cuckoo_diff, progpow_diff, randomx_diff,
@@ -286,6 +286,7 @@ impl TUIStatusListener for TUIStatusView {
 			.to_num(PoWType::Cuckatoo);
 		let progpow_header_diff = stats.header_stats.total_difficulty.to_num(PoWType::ProgPow);
 		let randomx_header_diff = stats.header_stats.total_difficulty.to_num(PoWType::RandomX);
+
 		let header_total_difficulty = format!(
 			"Cuckatoo: {}, ProgPow: {}, RandomX: {}",
 			cuckoo_header_diff, progpow_header_diff, randomx_header_diff,
@@ -328,7 +329,7 @@ fn test_status_txhashset_kernels() {
 		kernels_total: 5000,
 	};
 	let basic_status = TUIStatusView::update_sync_status(status);
-	assert!(basic_status.contains("4%"), basic_status);
+	assert!(basic_status.contains("4%"), "{}", basic_status);
 }
 
 #[test]
@@ -338,5 +339,5 @@ fn test_status_txhashset_rproofs() {
 		rproofs_total: 1000,
 	};
 	let basic_status = TUIStatusView::update_sync_status(status);
-	assert!(basic_status.contains("64%"), basic_status);
+	assert!(basic_status.contains("64%"), "{}", basic_status);
 }
