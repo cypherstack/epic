@@ -40,5 +40,12 @@ randomx = { git = "https://github.com/EpicCash/randomx-rust.git", tag = "v0.2.0"
 progpow = { git = "https://github.com/EpicCash/progpow-rust", tag = "v0.2.0" }
 
 
+[features]
+# Compile the foundation tables from debian/ into the crate, so that a node
+# with no foundation.json file beside it can still validate and mine
+# foundation blocks. Library users such as wallets never run that code and
+# build without the tables.
+embedded-foundation = []
+
 [dev-dependencies]
 serde_json = "1.0"
