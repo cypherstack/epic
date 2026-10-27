@@ -50,7 +50,7 @@ tokio = { version = "1.47.1", features = ["full"] }
 
 epic_api = { path = "./api", version = "4.0.0" }
 epic_config = { path = "./config", version = "4.0.0" }
-epic_core = { path = "./core", version = "4.0.0" }
+epic_core = { path = "./core", version = "4.0.0", features = ["embedded-foundation"] }
 epic_keychain = { path = "./keychain", version = "4.0.0" }
 epic_p2p = { path = "./p2p", version = "4.0.0" }
 epic_servers = { path = "./servers", version = "4.0.0" }

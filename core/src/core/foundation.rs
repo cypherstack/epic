@@ -71,12 +71,8 @@ pub fn save_in_disk(serialization: String, path: &Path) {
 
 /// Load the foundation coinbase relative to the height of the chain
 /// Loads the foundation output for the given height.
-/// If the foundation.json file exists, loads from file. Otherwise, uses the embedded mainnet content.
-use crate::global::{ChainTypes, CHAIN_TYPE};
-
-/// Load the foundation coinbase relative to the height of the chain
-/// Loads the foundation output for the given height.
-/// If the foundation.json file exists, loads from file. Otherwise, uses the embedded content for the current chain type.
+/// If the foundation.json file exists, loads from file. Otherwise, uses the tables
+/// embedded with the `embedded-foundation` feature.
 pub fn load_foundation_output(height: u64) -> CbData {
 	let index_foundation = foundation_index(height);
 
@@ -95,21 +91,7 @@ pub fn load_foundation_output(height: u64) -> CbData {
 		let reader = BufReader::new(file);
 		reader.lines().map(|l| l.unwrap()).collect()
 	} else {
-		// Use embedded content based on chain type
-		let chain_type = CHAIN_TYPE.read().clone();
-		match chain_type {
-			ChainTypes::Mainnet => {
-				static EMBEDDED_FOUNDATION_JSON: &str = include_str!("../../../debian/foundation.json");
-				EMBEDDED_FOUNDATION_JSON.lines().map(|l| l.to_string()).collect()
-			},
-			ChainTypes::AutomatedTesting |
-			ChainTypes::UserTesting |
-			ChainTypes::Floonet => {
-				static EMBEDDED_FOUNDATION_FLOONET_JSON: &str = include_str!("../../../debian/foundation_floonet.json");
-				EMBEDDED_FOUNDATION_FLOONET_JSON.lines().map(|l| l.to_string()).collect()
-			}
-			
-		}
+		embedded_foundation_lines(&path_str)
 	};
 
 	let line = lines
@@ -117,4 +99,29 @@ pub fn load_foundation_output(height: u64) -> CbData {
 		.unwrap_or_else(|| panic!("Index {} out of bounds in foundation.json!", index_foundation));
 
 	serde_json::from_str(line).unwrap()
+}
+
+/// The foundation tables compiled into the crate from debian/, used when no
+/// foundation.json file is found at the configured path. Only a node
+/// validates or mines foundation blocks; library users such as wallets never
+/// run this code, so the crate carries the tables only with the
+/// `embedded-foundation` feature.
+#[cfg(feature = "embedded-foundation")]
+fn embedded_foundation_lines(_path: &str) -> Vec<String> {
+	use crate::global::{ChainTypes, CHAIN_TYPE};
+	let json = match CHAIN_TYPE.read().clone() {
+		ChainTypes::Mainnet => include_str!("../../../debian/foundation.json"),
+		ChainTypes::AutomatedTesting | ChainTypes::UserTesting | ChainTypes::Floonet => {
+			include_str!("../../../debian/foundation_floonet.json")
+		}
+	};
+	json.lines().map(|l| l.to_string()).collect()
+}
+
+#[cfg(not(feature = "embedded-foundation"))]
+fn embedded_foundation_lines(path: &str) -> Vec<String> {
+	panic!(
+		"No foundation.json at {} and this build of epic_core embeds none; build it with the `embedded-foundation` feature or provide the file",
+		path
+	)
 }
